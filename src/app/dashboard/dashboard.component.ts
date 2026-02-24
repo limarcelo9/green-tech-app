@@ -46,8 +46,8 @@ export class DashboardComponent implements AfterViewInit {
 
         const bbox = `${bot.lng()},${bot.lat()},${top.lng()},${top.lat()}`;
 
-        // MapBiomas / INPE Deforestation WMS endpoint (Using Terrabrasilis Prodes as reliable fast WMS example for demonstration)
-        return `http://terrabrasilis.dpi.inpe.br/geoserver/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=true&LAYERS=prodes-amz:prodes_desmatamento&STYLES=&WIDTH=256&HEIGHT=256&SRS=EPSG:4326&BBOX=${bbox}`;
+        // MapBiomas Alerts WMS endpoint (Brazil wide coverage)
+        return `https://production.alerta.mapbiomas.org/geoserver/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=true&LAYERS=mapbiomas-alertas:dashboard_alerts-shapefile&STYLES=&WIDTH=256&HEIGHT=256&SRS=EPSG:4326&BBOX=${bbox}`;
       },
       tileSize: new google.maps.Size(256, 256),
       opacity: 0.8

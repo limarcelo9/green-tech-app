@@ -42,32 +42,32 @@ export class AnalyticsComponent implements OnInit {
   }
 
   private loadData(region?: string) {
-    const vegData = this.dataService.getVegetationData(region);
-    const climData = this.dataService.getClimateData(region);
-    const relData = this.dataService.getReliefData(region);
+    const landCoverData = this.dataService.getVegetationData(region);
+    const agricultureData = this.dataService.getClimateData(region);
+    const lossData = this.dataService.getReliefData(region);
 
     this.vegetationChartData = {
-      labels: vegData.labels,
+      labels: landCoverData.labels,
       datasets: [{
-        data: vegData.data,
-        backgroundColor: ['#166534', '#15803d', '#16a34a', '#22c55e', '#4ade80', '#86efac']
+        data: landCoverData.data,
+        backgroundColor: ['#166534', '#eab308', '#f97316', '#3b82f6', '#94a3b8']
       }]
     };
 
     this.climateChartData = {
-      labels: climData.labels,
+      labels: agricultureData.labels,
       datasets: [{
-        data: climData.data,
-        label: 'Cobertura Climática (%)',
+        data: agricultureData.data,
+        label: 'Área (Milhões de Hectares)',
         backgroundColor: '#f59e0b'
       }]
     };
 
     this.reliefChartData = {
-      labels: relData.labels,
+      labels: lossData.labels,
       datasets: [{
-        data: relData.data,
-        backgroundColor: ['#64748b', '#94a3b8', '#cbd5e1']
+        data: lossData.data,
+        backgroundColor: ['#ef4444', '#22c55e']
       }]
     };
   }

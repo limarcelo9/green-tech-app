@@ -14,44 +14,44 @@ export class MockDataService {
 
   private countryData = {
     vegetation: {
-      labels: ['Amazônia', 'Cerrado', 'Mata Atlântica', 'Caatinga', 'Pampa', 'Pantanal'],
-      data: [49.2, 23.9, 13.0, 9.9, 2.0, 1.8]
+      labels: ['Floresta', 'Form. Savânica', 'Agropecuária', 'Água/Outros'],
+      data: [490, 90, 240, 31]
     },
     climate: {
-      labels: ['Equatorial', 'Tropical', 'Semiárido', 'Subtropical'],
-      data: [35, 45, 10, 10]
+      labels: ['Pastagem', 'Agricultura', 'Cultivo Florestal'],
+      data: [160, 75, 5]
     },
     relief: {
-      labels: ['Planaltos', 'Depressões', 'Planícies'],
-      data: [45, 40, 15]
+      labels: ['Antropizada', 'Nativa Conservada'],
+      data: [300, 550]
     }
   };
 
   private regionData: Record<string, any> = {
     norte: {
-      vegetation: { labels: ['Amazônia', 'Cerrado'], data: [95, 5] },
-      climate: { labels: ['Equatorial', 'Tropical'], data: [90, 10] },
-      relief: { labels: ['Planícies', 'Depressões', 'Planaltos'], data: [45, 30, 25] }
+      vegetation: { labels: ['Floresta', 'Form. Savânica', 'Agropecuária', 'Água/Outros'], data: [310, 10, 35, 15] },
+      climate: { labels: ['Pastagem', 'Agricultura', 'Cultivo Florestal'], data: [32, 2, 1] },
+      relief: { labels: ['Antropizada', 'Nativa Conservada'], data: [35, 335] }
     },
     nordeste: {
-      vegetation: { labels: ['Caatinga', 'Mata Atlântica', 'Cerrado', 'Amazônia'], data: [50, 20, 25, 5] },
-      climate: { labels: ['Semiárido', 'Tropical', 'Equatorial'], data: [60, 30, 10] },
-      relief: { labels: ['Planaltos', 'Depressões', 'Planícies'], data: [60, 30, 10] }
+      vegetation: { labels: ['Floresta', 'Form. Savânica', 'Agropecuária', 'Água/Outros'], data: [30, 55, 45, 5] },
+      climate: { labels: ['Pastagem', 'Agricultura', 'Cultivo Florestal'], data: [25, 18, 2] },
+      relief: { labels: ['Antropizada', 'Nativa Conservada'], data: [45, 90] }
     },
     centroOeste: {
-      vegetation: { labels: ['Cerrado', 'Pantanal', 'Amazônia'], data: [65, 20, 15] },
-      climate: { labels: ['Tropical', 'Equatorial'], data: [95, 5] },
-      relief: { labels: ['Planaltos', 'Depressões', 'Planícies'], data: [55, 35, 10] }
+      vegetation: { labels: ['Floresta', 'Form. Savânica', 'Agropecuária', 'Água/Outros'], data: [50, 35, 65, 6] },
+      climate: { labels: ['Pastagem', 'Agricultura', 'Cultivo Florestal'], data: [40, 24, 1] },
+      relief: { labels: ['Antropizada', 'Nativa Conservada'], data: [65, 91] }
     },
     sudeste: {
-      vegetation: { labels: ['Mata Atlântica', 'Cerrado'], data: [80, 20] },
-      climate: { labels: ['Tropical de Altitude', 'Tropical'], data: [75, 25] },
-      relief: { labels: ['Planaltos', 'Escarpas'], data: [85, 15] }
+      vegetation: { labels: ['Floresta', 'Form. Savânica', 'Agropecuária', 'Água/Outros'], data: [20, 5, 60, 3] },
+      climate: { labels: ['Pastagem', 'Agricultura', 'Cultivo Florestal'], data: [45, 14, 1] },
+      relief: { labels: ['Antropizada', 'Nativa Conservada'], data: [60, 28] }
     },
     sul: {
-      vegetation: { labels: ['Mata Atlântica', 'Pampa', 'Mata de Araucárias'], data: [40, 35, 25] },
-      climate: { labels: ['Subtropical'], data: [100] },
-      relief: { labels: ['Planaltos', 'Planícies'], data: [70, 30] }
+      vegetation: { labels: ['Floresta', 'Form. Savânica', 'Agropecuária', 'Água/Outros'], data: [15, 3, 35, 1] },
+      climate: { labels: ['Pastagem', 'Agricultura', 'Cultivo Florestal'], data: [12, 22, 1] },
+      relief: { labels: ['Antropizada', 'Nativa Conservada'], data: [35, 19] }
     }
   };
 
