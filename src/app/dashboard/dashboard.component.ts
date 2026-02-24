@@ -1,16 +1,28 @@
 import { Component, inject, ViewChild, AfterViewInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { GoogleMap, MapMarker } from '@angular/google-maps';
 import { Router } from '@angular/router';
+import { MockDataService } from '../services/mock-data.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [GoogleMap, MapMarker],
+  imports: [GoogleMap, MapMarker, CommonModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
 export class DashboardComponent implements AfterViewInit {
   private router = inject(Router);
+  private dataService = inject(MockDataService);
+
+  // Interactive Pin State
+  selectedPin: google.maps.LatLngLiteral | null = null;
+  pinLoading = false;
+  pinIndicators = {
+    temperature: '--',
+    floodRisk: '--',
+    elevation: '--'
+  };
 
   @ViewChild(GoogleMap, { static: false }) mapComponent!: GoogleMap;
 
@@ -151,6 +163,34 @@ export class DashboardComponent implements AfterViewInit {
 
   navigateToRegion(regionKey: string) {
     this.router.navigate(['/analytics', regionKey]);
+  }
+
+  // ---- Interactive Map Click ----
+  onMapClick(event: google.maps.MapMouseEvent) {
+    if (!event.latLng) return;
+    const lat = event.latLng.lat();
+    const lng = event.latLng.lng();
+
+    this.selectedPin = { lat, lng };
+    this.pinLoading = true;
+    this.pinIndicators = { temperature: '...', floodRisk: '...', elevation: '...' };
+
+    // Fetch live data for this exact coordinate
+    this.dataService.getTemperatureByCoords(lat, lng).subscribe(val => {
+      this.pinIndicators.temperature = val;
+    });
+    this.dataService.getFloodRiskByCoords(lat, lng).subscribe(val => {
+      this.pinIndicators.floodRisk = val;
+    });
+    this.dataService.getElevationByCoords(lat, lng).subscribe(val => {
+      this.pinIndicators.elevation = val;
+      this.pinLoading = false; // last to resolve typically
+    });
+  }
+
+  clearPin() {
+    this.selectedPin = null;
+    this.pinLoading = false;
   }
 
   // 3D Parallax logic

@@ -121,4 +121,35 @@ export class MockDataService {
   getEnvironmentInfo(regionKey: string) {
     return this.regionData[regionKey] || this.regionData['plano-piloto'];
   }
+
+  // ---- Coordinate-based methods (for arbitrary map clicks) ----
+
+  getTemperatureByCoords(lat: number, lng: number): Observable<string> {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,surface_temperature&timezone=America%2FSao_Paulo`;
+    return this.http.get<any>(url).pipe(
+      map(res => `${res.current.surface_temperature || res.current.temperature_2m || '--'} °C`),
+      catchError(() => of('-- °C'))
+    );
+  }
+
+  getFloodRiskByCoords(lat: number, lng: number): Observable<string> {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=precipitation_sum&timezone=America%2FSao_Paulo&forecast_days=1`;
+    return this.http.get<any>(url).pipe(
+      map(res => {
+        const precip = res.daily?.precipitation_sum?.[0] || 0;
+        if (precip > 50) return 'ALTO (Enxurrada)';
+        if (precip > 20) return 'MÉDIO (Atenção)';
+        return 'BAIXO (Seguro)';
+      }),
+      catchError(() => of('Indisponível'))
+    );
+  }
+
+  getElevationByCoords(lat: number, lng: number): Observable<string> {
+    const url = `https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lng}`;
+    return this.http.get<any>(url).pipe(
+      map(res => `${res.results[0].elevation} m`),
+      catchError(() => of('~1000 m'))
+    );
+  }
 }
