@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ViewChild, AfterViewInit } from '@angular/core';
 import { GoogleMap, MapMarker } from '@angular/google-maps';
 import { Router } from '@angular/router';
 
@@ -9,8 +9,10 @@ import { Router } from '@angular/router';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
-export class DashboardComponent {
+export class DashboardComponent implements AfterViewInit {
   private router = inject(Router);
+
+  @ViewChild(GoogleMap, { static: false }) mapComponent!: GoogleMap;
 
   // Google Maps configuration
   center: google.maps.LatLngLiteral = { lat: -15.7938, lng: -47.8827 }; // Default to Brasília (Center)
@@ -24,6 +26,44 @@ export class DashboardComponent {
     heading: 90, // Direção da vista
     rotateControl: true // Permitir rotacionar
   };
+
+  isWmsActive = false;
+  private wmsLayer!: google.maps.ImageMapType;
+
+  ngAfterViewInit() {
+    this.wmsLayer = new google.maps.ImageMapType({
+      getTileUrl: (coord, zoom) => {
+        // Standard WMS Tile projection formula
+        const proj = this.mapComponent.googleMap?.getProjection();
+        if (!proj) return null;
+        const zfactor = Math.pow(2, zoom);
+
+        // Calculate Bounding Box coordinates for EPSG:4326/EPSG:3857 for the tile
+        const top = proj.fromPointToLatLng(new google.maps.Point(coord.x * 256 / zfactor, coord.y * 256 / zfactor));
+        const bot = proj.fromPointToLatLng(new google.maps.Point((coord.x + 1) * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
+
+        if (!top || !bot) return null;
+
+        const bbox = `${bot.lng()},${bot.lat()},${top.lng()},${top.lat()}`;
+
+        // MapBiomas / INPE Deforestation WMS endpoint (Using Terrabrasilis Prodes as reliable fast WMS example for demonstration)
+        return `http://terrabrasilis.dpi.inpe.br/geoserver/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=true&LAYERS=prodes-amz:prodes_desmatamento&STYLES=&WIDTH=256&HEIGHT=256&SRS=EPSG:4326&BBOX=${bbox}`;
+      },
+      tileSize: new google.maps.Size(256, 256),
+      opacity: 0.8
+    });
+  }
+
+  toggleEnvironmentLayer() {
+    if (this.mapComponent?.googleMap) {
+      if (!this.isWmsActive) {
+        this.mapComponent.googleMap.overlayMapTypes.push(this.wmsLayer);
+      } else {
+        this.mapComponent.googleMap.overlayMapTypes.clear();
+      }
+      this.isWmsActive = !this.isWmsActive;
+    }
+  }
 
   setMapType(type: 'roadmap' | 'satellite' | 'hybrid' | 'terrain') {
     this.mapOptions = {
