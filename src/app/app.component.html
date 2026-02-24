@@ -74,35 +74,65 @@
       </button>
     </header>
 
-    <div
-      class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 w-full h-[500px] overflow-hidden flex flex-col">
+    <div (mousemove)="onMouseMove($event)" (mouseleave)="onMouseLeave()"
+      class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 w-full h-[650px] overflow-hidden flex flex-col perspective-1000">
       <!-- Map Controls -->
-      <div class="flex gap-2 mb-3">
-        <button (click)="setMapType('satellite')" [class.bg-green-600]="mapOptions.mapTypeId === 'satellite'"
-          [class.text-white]="mapOptions.mapTypeId === 'satellite'"
-          [class.bg-gray-100]="mapOptions.mapTypeId !== 'satellite'"
-          [class.text-gray-700]="mapOptions.mapTypeId !== 'satellite'"
-          class="px-4 py-2 rounded-md text-sm font-medium hover:bg-green-500 hover:text-white transition-colors">
-          Satellite
-        </button>
-        <button (click)="setMapType('roadmap')" [class.bg-green-600]="mapOptions.mapTypeId === 'roadmap'"
-          [class.text-white]="mapOptions.mapTypeId === 'roadmap'"
-          [class.bg-gray-100]="mapOptions.mapTypeId !== 'roadmap'"
-          [class.text-gray-700]="mapOptions.mapTypeId !== 'roadmap'"
-          class="px-4 py-2 rounded-md text-sm font-medium hover:bg-green-500 hover:text-white transition-colors">
-          Roadmap
-        </button>
-        <button (click)="setMapType('terrain')" [class.bg-green-600]="mapOptions.mapTypeId === 'terrain'"
-          [class.text-white]="mapOptions.mapTypeId === 'terrain'"
-          [class.bg-gray-100]="mapOptions.mapTypeId !== 'terrain'"
-          [class.text-gray-700]="mapOptions.mapTypeId !== 'terrain'"
-          class="px-4 py-2 rounded-md text-sm font-medium hover:bg-green-500 hover:text-white transition-colors">
-          Terrain
-        </button>
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <!-- Map Type Toggles -->
+        <div class="flex gap-2">
+          <button (click)="setMapType('satellite')" [class.bg-green-600]="mapOptions.mapTypeId === 'satellite'"
+            [class.text-white]="mapOptions.mapTypeId === 'satellite'"
+            [class.bg-gray-100]="mapOptions.mapTypeId !== 'satellite'"
+            [class.text-gray-700]="mapOptions.mapTypeId !== 'satellite'"
+            class="px-3 py-1.5 rounded-md text-sm font-medium hover:bg-green-500 hover:text-white transition-colors">
+            Satellite
+          </button>
+          <button (click)="setMapType('roadmap')" [class.bg-green-600]="mapOptions.mapTypeId === 'roadmap'"
+            [class.text-white]="mapOptions.mapTypeId === 'roadmap'"
+            [class.bg-gray-100]="mapOptions.mapTypeId !== 'roadmap'"
+            [class.text-gray-700]="mapOptions.mapTypeId !== 'roadmap'"
+            class="px-3 py-1.5 rounded-md text-sm font-medium hover:bg-green-500 hover:text-white transition-colors">
+            Roadmap
+          </button>
+          <button (click)="setMapType('terrain')" [class.bg-green-600]="mapOptions.mapTypeId === 'terrain'"
+            [class.text-white]="mapOptions.mapTypeId === 'terrain'"
+            [class.bg-gray-100]="mapOptions.mapTypeId !== 'terrain'"
+            [class.text-gray-700]="mapOptions.mapTypeId !== 'terrain'"
+            class="px-3 py-1.5 rounded-md text-sm font-medium hover:bg-green-500 hover:text-white transition-colors">
+            Terrain
+          </button>
+        </div>
+
+        <!-- Region Selectors -->
+        <div class="flex items-center gap-1.5 border-l border-gray-200 pl-3">
+          <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider mr-1">Regiões:</span>
+          <button (click)="setRegion('norte')"
+            class="px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-md text-xs font-medium hover:bg-green-50 hover:text-green-700 hover:border-green-300 transition-all">
+            Norte
+          </button>
+          <button (click)="setRegion('nordeste')"
+            class="px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-md text-xs font-medium hover:bg-green-50 hover:text-green-700 hover:border-green-300 transition-all">
+            Nordeste
+          </button>
+          <button (click)="setRegion('centroOeste')"
+            class="px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-md text-xs font-medium hover:bg-green-50 hover:text-green-700 hover:border-green-300 transition-all">
+            Centro-Oeste
+          </button>
+          <button (click)="setRegion('sudeste')"
+            class="px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-md text-xs font-medium hover:bg-green-50 hover:text-green-700 hover:border-green-300 transition-all">
+            Sudeste
+          </button>
+          <button (click)="setRegion('sul')"
+            class="px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-md text-xs font-medium hover:bg-green-50 hover:text-green-700 hover:border-green-300 transition-all">
+            Sul
+          </button>
+        </div>
       </div>
 
       <!-- Map Provider -->
-      <div class="flex-1 w-full rounded-lg overflow-hidden border border-gray-200">
+      <div
+        class="flex-1 w-full rounded-2xl overflow-hidden border-4 border-white shadow-[0_20px_50px_rgba(8,_112,_184,_0.7)] transition-transform duration-300 hover:shadow-[0_30px_60px_rgba(8,_112,_184,_0.9)]"
+        [style.transform]="mapTransform">
         <google-map height="100%" width="100%" [center]="center" [zoom]="zoom" [options]="mapOptions"></google-map>
       </div>
     </div>
