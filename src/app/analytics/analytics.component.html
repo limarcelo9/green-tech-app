@@ -1,5 +1,5 @@
 <header class="flex justify-between items-center mb-8">
-    <h2 class="text-3xl font-bold text-gray-800">Analytics - Visão Geral: {{ regionName }}</h2>
+    <h2 class="text-3xl font-bold text-gray-800">Analytics - Visão Geral: {{ biomeName }}</h2>
 </header>
 
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -12,29 +12,51 @@
             <canvas baseChart [data]="vegetationChartData" [options]="vegetationChartOptions" [type]="'pie'">
             </canvas>
         </div>
-        <p class="text-sm text-gray-500 mt-4 text-center">Formação florestal, savânica, agropecuária e água.</p>
-    </div>
-
-    <!-- Agriculture Chart -->
-    <div
-        class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col hover:shadow-md transition-shadow">
-        <h3 class="text-lg font-semibold text-gray-700 mb-4">Uso Antrópico / Agropecuário</h3>
-        <div class="flex-1 min-h-[300px] flex items-center justify-center">
-            <canvas baseChart [data]="climateChartData" [options]="climateChartOptions" [type]="'bar'">
-            </canvas>
-        </div>
-        <p class="text-sm text-gray-500 mt-4 text-center">Pastagem e agricultura em Milhões de ha.</p>
+        <p class="text-sm text-gray-500 mt-4 text-center">Proporção da cobertura em milhões de hectares.</p>
     </div>
 
     <!-- Deforestation Chart -->
     <div
         class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col hover:shadow-md transition-shadow">
-        <h3 class="text-lg font-semibold text-gray-700 mb-4">Perda de Vegetação Nativa (1985-2023)</h3>
+        <h3 class="text-lg font-semibold text-gray-700 mb-4">Uso do Solo: Nativo x Antrópico</h3>
         <div class="flex-1 min-h-[300px] flex items-center justify-center">
             <canvas baseChart [data]="reliefChartData" [options]="reliefChartOptions" [type]="'doughnut'">
             </canvas>
         </div>
-        <p class="text-sm text-gray-500 mt-4 text-center">Área Antropizada x Vegetação Nativa Remanescente.</p>
+        <p class="text-sm text-gray-500 mt-4 text-center">Balanço de área nativa conservada contra expansão humana.</p>
     </div>
 
+    <!-- Agriculture Chart -->
+    <div
+        class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col hover:shadow-md transition-shadow">
+        <h3 class="text-lg font-semibold text-gray-700 mb-4">Alertas Recentes (MapBiomas API)</h3>
+        <div class="flex-1 min-h-[300px] flex items-center justify-center">
+            <canvas baseChart [data]="climateChartData" [options]="climateChartOptions" [type]="'bar'">
+            </canvas>
+        </div>
+        <p class="text-sm text-gray-500 mt-4 text-center">Total de polígonos de desmatamento detectados na API.</p>
+    </div>
+
+</div>
+
+<!-- Biome Info Panel -->
+<div *ngIf="biomeInfo" class="mt-8 bg-green-50 border border-green-100 rounded-xl p-6 shadow-sm">
+    <div class="flex items-start space-x-4">
+        <div class="bg-green-600 p-3 rounded-full text-white mt-1 shadow-sm">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold text-green-900 mb-2">Sobre o Bioma: {{ biomeName }}</h3>
+            <p class="text-green-800 leading-relaxed mb-4">
+                {{ biomeInfo.description }}
+            </p>
+            <h4 class="text-sm font-bold text-green-900 uppercase tracking-wide mb-1">Por que esses indicadores?</h4>
+            <p class="text-green-800/90 text-sm leading-relaxed">
+                {{ biomeInfo.relevance }}
+            </p>
+        </div>
+    </div>
 </div>

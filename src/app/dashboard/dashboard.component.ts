@@ -27,42 +27,65 @@ export class DashboardComponent implements AfterViewInit {
     rotateControl: true // Permitir rotacionar
   };
 
-  isWmsActive = false;
-  private wmsLayer!: google.maps.ImageMapType;
+  // MapBiomas Layers Integration
+  mapBiomasLayers: { id: string, title: string, layerName: string, isActive: boolean, overlay: any }[] = [
+    { id: 'desmatamento', title: 'Desmatamento (Biomas)', layerName: 'mapbiomas-alertas:dashboard_biomes-static-layer', isActive: false, overlay: null },
+    { id: 'indigenous', title: 'Terras Indígenas', layerName: 'mapbiomas-alertas:dashboard_indigenous-lands-static-layer', isActive: false, overlay: null },
+    { id: 'conservation', title: 'Unidades de Conservação', layerName: 'mapbiomas-alertas:dashboard_conservation-unit-static-layer', isActive: false, overlay: null },
+    { id: 'quilombo', title: 'Áreas Quilombolas', layerName: 'mapbiomas-alertas:dashboard_quilombo-static-layer', isActive: false, overlay: null },
+    { id: 'settlements', title: 'Assentamentos', layerName: 'mapbiomas-alertas:dashboard_settlements-static-layer', isActive: false, overlay: null }
+  ];
 
-  ngAfterViewInit() {
-    this.wmsLayer = new google.maps.ImageMapType({
-      getTileUrl: (coord, zoom) => {
-        // Standard WMS Tile projection formula
-        const proj = this.mapComponent.googleMap?.getProjection();
-        if (!proj) return null;
-        const zfactor = Math.pow(2, zoom);
-
-        // Calculate Bounding Box coordinates for EPSG:4326/EPSG:3857 for the tile
-        const top = proj.fromPointToLatLng(new google.maps.Point(coord.x * 256 / zfactor, coord.y * 256 / zfactor));
-        const bot = proj.fromPointToLatLng(new google.maps.Point((coord.x + 1) * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
-
-        if (!top || !bot) return null;
-
-        // BBOX=minX,minY,maxX,maxY (West, South, East, North)
-        const bbox = `${top.lng()},${bot.lat()},${bot.lng()},${top.lat()}`;
-
-        // MapBiomas Alerts WMS endpoint (Brazil wide coverage using Biomes to be highly visible)
-        return `https://production.alerta.mapbiomas.org/geoserver/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=true&LAYERS=mapbiomas-alertas:dashboard_biomes-static-layer&STYLES=&WIDTH=256&HEIGHT=256&SRS=EPSG:4326&BBOX=${bbox}`;
-      },
-      tileSize: new google.maps.Size(256, 256),
-      opacity: 0.8
-    });
+  ngOnInit() {
+    this.center = { lat: -14.235, lng: -51.925 };
+    this.zoom = 4;
   }
 
-  toggleEnvironmentLayer() {
-    if (this.mapComponent?.googleMap) {
-      if (!this.isWmsActive) {
-        this.mapComponent.googleMap.overlayMapTypes.push(this.wmsLayer);
-      } else {
-        this.mapComponent.googleMap.overlayMapTypes.clear();
+  ngAfterViewInit() {
+    // 3D Tilt Initialization
+    // Assuming mapContainer and bounds are defined elsewhere if needed for 3D tilt
+    // if (this.mapContainer && this.mapContainer.nativeElement) {
+    //   this.bounds = this.mapContainer.nativeElement.getBoundingClientRect();
+    // }
+  }
+
+  toggleLayer(layerId: string) {
+    const layer = this.mapBiomasLayers.find(l => l.id === layerId);
+    if (!layer || !this.mapComponent || !this.mapComponent.googleMap) return;
+
+    layer.isActive = !layer.isActive;
+    const map = this.mapComponent.googleMap;
+
+    if (layer.isActive) {
+      // Create new WMS layer instance if enabling
+      layer.overlay = new google.maps.ImageMapType({
+        getTileUrl: (coord, zoom) => {
+          const proj = map.getProjection();
+          if (!proj) return null;
+          const zfactor = Math.pow(2, zoom);
+
+          const top = proj.fromPointToLatLng(new google.maps.Point(coord.x * 256 / zfactor, coord.y * 256 / zfactor));
+          const bot = proj.fromPointToLatLng(new google.maps.Point((coord.x + 1) * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
+
+          if (!top || !bot) return null;
+
+          const bbox = `${top.lng()},${bot.lat()},${bot.lng()},${top.lat()}`;
+          return `https://production.alerta.mapbiomas.org/geoserver/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=true&LAYERS=${layer.layerName}&STYLES=&WIDTH=256&HEIGHT=256&SRS=EPSG:4326&BBOX=${bbox}`;
+        },
+        tileSize: new google.maps.Size(256, 256),
+        opacity: 0.8
+      });
+      map.overlayMapTypes.push(layer.overlay);
+    } else {
+      // Remove layer if disabling
+      const overlays = map.overlayMapTypes.getArray();
+      for (let i = 0; i < overlays.length; i++) {
+        if (overlays[i] === layer.overlay) {
+          map.overlayMapTypes.removeAt(i);
+          layer.overlay = null;
+          break;
+        }
       }
-      this.isWmsActive = !this.isWmsActive;
     }
   }
 
@@ -73,28 +96,29 @@ export class DashboardComponent implements AfterViewInit {
     };
   }
 
-  // Predefined Brazil Regions & Markers
-  regions: Record<string, { lat: number, lng: number, zoom: number, title: string }> = {
-    norte: { lat: -3.7327, lng: -60.9169, zoom: 5, title: 'Norte' }, // Amazonas/Norte
-    nordeste: { lat: -6.9023, lng: -39.0436, zoom: 6, title: 'Nordeste' }, // Ceará/Nordeste
-    centroOeste: { lat: -15.7938, lng: -47.8827, zoom: 6, title: 'Centro-Oeste' }, // Brasília/Centro-Oeste
-    sudeste: { lat: -21.0, lng: -46.0, zoom: 6, title: 'Sudeste' }, // São Paulo-Minas/Sudeste
-    sul: { lat: -27.5953, lng: -52.0, zoom: 6, title: 'Sul' } // SC/Sul
+  // Predefined Brazil Biomes & Markers
+  biomes: Record<string, { lat: number, lng: number, zoom: number, title: string }> = {
+    amazonia: { lat: -3.7327, lng: -60.9169, zoom: 5, title: 'Amazônia' },
+    caatinga: { lat: -6.9023, lng: -39.0436, zoom: 6, title: 'Caatinga' },
+    cerrado: { lat: -15.7938, lng: -47.8827, zoom: 6, title: 'Cerrado' },
+    mataAtlantica: { lat: -21.0, lng: -46.0, zoom: 6, title: 'Mata Atlântica' },
+    pampa: { lat: -30.0346, lng: -51.2177, zoom: 6, title: 'Pampa' },
+    pantanal: { lat: -19.0, lng: -56.5, zoom: 6, title: 'Pantanal' }
   };
 
   // Keep track of the keys for iteration in template
-  regionKeys = Object.keys(this.regions);
+  biomeKeys = Object.keys(this.biomes);
 
-  setRegion(regionKey: string) {
-    const region = this.regions[regionKey];
-    if (region) {
-      this.center = { lat: region.lat, lng: region.lng };
-      this.zoom = region.zoom;
+  setBiome(biomeKey: string) {
+    const biome = this.biomes[biomeKey];
+    if (biome) {
+      this.center = { lat: biome.lat, lng: biome.lng };
+      this.zoom = biome.zoom;
     }
   }
 
-  navigateToRegion(regionKey: string) {
-    this.router.navigate(['/analytics', regionKey]);
+  navigateToBiome(biomeKey: string) {
+    this.router.navigate(['/analytics', biomeKey]);
   }
 
   // 3D Parallax logic

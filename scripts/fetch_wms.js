@@ -9,6 +9,8 @@ https.get('https://production.alerta.mapbiomas.org/geoserver/wms?request=GetCapa
         while ((match = regex.exec(data)) !== null) {
             layerNames.push(match[1]);
         }
-        console.log("Found layers:", layerNames.slice(0, 30));
+        const fs = require('fs');
+        fs.writeFileSync('wms_layers.json', JSON.stringify(layerNames, null, 2));
+        console.log("Saved " + layerNames.length + " layers to wms_layers.json");
     });
 }).on('error', err => console.error(err));

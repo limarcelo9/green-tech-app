@@ -1,0 +1,231 @@
+{
+  "data": {
+    "__schema": {
+      "queryType": {
+        "fields": [
+          {
+            "name": "actionsTypes",
+            "description": "Retorna a lista com os tipos de ações presentes na plataforma",
+            "args": []
+          },
+          {
+            "name": "alert",
+            "description": "A partir de um código de alerta você poderá realizar a busca por mais informações através da query alert(alertCode: $alertCode), nesta requisição você informar o código do alerta e a API retornará as principais informações. O resultado poderá ser customizado por você, para este exemplo a requisição retornará informações como os biomas, cidades, propriedades cruzadas, fontes e a geometria do alerta.",
+            "args": [
+              {
+                "name": "alertCode"
+              },
+              {
+                "name": "propertyCode"
+              }
+            ]
+          },
+          {
+            "name": "alertDateRange",
+            "description": "Datas máxima e mínima de publicação dos alertas, sendo que as publicações de alertas são semanais",
+            "args": [
+              {
+                "name": "startDate"
+              }
+            ]
+          },
+          {
+            "name": "alertStatusByBiomes",
+            "description": "Translation missing: pt-BR.graphql.queries.alert_status_by_biomes",
+            "args": []
+          },
+          {
+            "name": "alerts",
+            "description": "A consulta dos alertas publicados na plataforma é realizada através da query alerts que tem como parâmetro filtros como: data de publicação e data de deteção, tamanho, área de busca, etc. O resultado será a lista paginada dos alertas.",
+            "args": [
+              {
+                "name": "alertCodes"
+              },
+              {
+                "name": "propertyCodes"
+              },
+              {
+                "name": "page"
+              },
+              {
+                "name": "limit"
+              },
+              {
+                "name": "startDate"
+              },
+              {
+                "name": "endDate"
+              },
+              {
+                "name": "dateType"
+              },
+              {
+                "name": "startSize"
+              },
+              {
+                "name": "endSize"
+              },
+              {
+                "name": "territoryIds"
+              },
+              {
+                "name": "territoryCategory"
+              },
+              {
+                "name": "statusName"
+              },
+              {
+                "name": "sources"
+              },
+              {
+                "name": "intersectWithCar"
+              },
+              {
+                "name": "isInEmbargoedArea"
+              },
+              {
+                "name": "isInAuthorizedArea"
+              },
+              {
+                "name": "deforestationClasses"
+              },
+              {
+                "name": "actionTypesIds"
+              },
+              {
+                "name": "boundingBox"
+              },
+              {
+                "name": "sortField"
+              },
+              {
+                "name": "sortDirection"
+              }
+            ]
+          },
+          {
+            "name": "areasOfInterest",
+            "description": "Os territórios de interesse são a forma como um usuário monitora uma determinada área de interesse para os atuais e futuros alertas. Para a consulta dos seus territórios de interesse utilize a query myMaps() a requisição retorná todos os territórios de interesses já criados por seu usuário.",
+            "args": []
+          },
+          {
+            "name": "currentlyInPrivacyNotice",
+            "description": "Retorna a nota de privacidade em uso corrente na plataforma",
+            "args": [
+              {
+                "name": "destination"
+              }
+            ]
+          },
+          {
+            "name": "currentlyInTermOfUse",
+            "description": "Retorna os termos de uso correntes da plataforma",
+            "args": [
+              {
+                "name": "destination"
+              }
+            ]
+          },
+          {
+            "name": "findLastUpdateRelatory",
+            "description": null,
+            "args": []
+          },
+          {
+            "name": "findSuspendedJudicialAlert",
+            "description": null,
+            "args": [
+              {
+                "name": "carCode"
+              }
+            ]
+          },
+          {
+            "name": "institutionsCsvExport",
+            "description": null,
+            "args": []
+          },
+          {
+            "name": "lastAlertPublication",
+            "description": "Retorna a última data em que alertas foram publicados na plataforma e a quantidade de alertas que foram publicados",
+            "args": []
+          },
+          {
+            "name": "pointInformation",
+            "description": "Retorna as informações de territórios que cruzam o ponto buscado",
+            "args": [
+              {
+                "name": "boundingBox"
+              }
+            ]
+          },
+          {
+            "name": "relatoryAlert",
+            "description": "Você precisará realizar o download de todos os alertas no formato desejado (csv/shapefile) e também o tipo de conteúdo do arquivo (alertas ou alertas com cruzamento com Imóvel Rural)",
+            "args": [
+              {
+                "name": "format"
+              },
+              {
+                "name": "typename"
+              }
+            ]
+          },
+          {
+            "name": "ruralProperty",
+            "description": "Realize a busca de alertas a partir de um imóvel rural (CAR/SIGEF/SNCI) através da query ruralProperty(carCode: $carCode) . A requisição requer um Imóvel Rural cruzados com alertas na nossa base de dados e retorna a lista com todos os alertas vinculados a este imóvel específico específico",
+            "args": [
+              {
+                "name": "propertyCode"
+              }
+            ]
+          },
+          {
+            "name": "supportCases",
+            "description": "Retorna os casos de suporte do usuário que está fazendo a requisição",
+            "args": [
+              {
+                "name": "page"
+              },
+              {
+                "name": "limit"
+              },
+              {
+                "name": "userOrDescriptionCont"
+              },
+              {
+                "name": "supportCaseTypeEq"
+              },
+              {
+                "name": "lastStatusEq"
+              },
+              {
+                "name": "isAdminPage"
+              }
+            ]
+          },
+          {
+            "name": "territoryOptions",
+            "description": "Você poderá consultar todos os territórios da plataforma através da query territory_options(category: $category). A requisição tem como parâmetro o tipo de território (biomas, municípios, áreas de conservação, etc) e retornará todos os territórios que você poderá utilizar para realizar busca de alertas.",
+            "args": []
+          },
+          {
+            "name": "usersAndInstitutionsXlsxExport",
+            "description": null,
+            "args": []
+          },
+          {
+            "name": "usersCsvExport",
+            "description": null,
+            "args": []
+          },
+          {
+            "name": "version",
+            "description": "Retorna a versão da API",
+            "args": []
+          }
+        ]
+      }
+    }
+  }
+}
