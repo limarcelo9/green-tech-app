@@ -193,6 +193,13 @@ export class DashboardComponent implements AfterViewInit {
     this.pinLoading = false;
   }
 
+  navigateToPin() {
+    if (!this.selectedPin) return;
+    this.router.navigate(['/analytics'], {
+      queryParams: { lat: this.selectedPin.lat.toFixed(6), lng: this.selectedPin.lng.toFixed(6) }
+    });
+  }
+
   // 3D Parallax logic
   mapTransform = 'perspective(1000px) rotateX(2deg) rotateY(0deg)';
 
