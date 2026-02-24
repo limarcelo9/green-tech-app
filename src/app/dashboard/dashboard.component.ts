@@ -44,10 +44,11 @@ export class DashboardComponent implements AfterViewInit {
 
         if (!top || !bot) return null;
 
-        const bbox = `${bot.lng()},${bot.lat()},${top.lng()},${top.lat()}`;
+        // BBOX=minX,minY,maxX,maxY (West, South, East, North)
+        const bbox = `${top.lng()},${bot.lat()},${bot.lng()},${top.lat()}`;
 
-        // MapBiomas Alerts WMS endpoint (Brazil wide coverage)
-        return `https://production.alerta.mapbiomas.org/geoserver/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=true&LAYERS=mapbiomas-alertas:dashboard_alerts-shapefile&STYLES=&WIDTH=256&HEIGHT=256&SRS=EPSG:4326&BBOX=${bbox}`;
+        // MapBiomas Alerts WMS endpoint (Brazil wide coverage using Biomes to be highly visible)
+        return `https://production.alerta.mapbiomas.org/geoserver/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=true&LAYERS=mapbiomas-alertas:dashboard_biomes-static-layer&STYLES=&WIDTH=256&HEIGHT=256&SRS=EPSG:4326&BBOX=${bbox}`;
       },
       tileSize: new google.maps.Size(256, 256),
       opacity: 0.8
