@@ -1,181 +1,147 @@
 <div class="h-[calc(100vh-64px)] overflow-y-auto bg-gray-50/50 relative p-4 lg:p-10">
     <div class="max-w-7xl mx-auto min-h-full flex flex-col">
 
-        <!-- Header Section -->
-        <div class="mb-10 animate-fade-in-up">
-            <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight font-outfit mb-4">
-                {{ regionInfo.name }}
-            </h1>
-            <p class="text-lg text-gray-600 max-w-3xl leading-relaxed">
-                {{ regionInfo.info }}
-            </p>
+        <!-- Header + State Selector -->
+        <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight font-outfit mb-2">
+                    {{ locationInfo.name }}
+                </h1>
+                <p class="text-lg text-gray-600 max-w-2xl leading-relaxed">{{ locationInfo.info }}</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <label class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Estado:</label>
+                <select (change)="setEstado($any($event.target).value)"
+                    class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 shadow-sm focus:ring-2 focus:ring-green-500 cursor-pointer">
+                    @for (key of dataService.stateKeys; track key) {
+                    <option [value]="key" [selected]="key === selectedState">{{ dataService.states[key].sigla }} - {{
+                        dataService.states[key].name }}</option>
+                    }
+                </select>
+            </div>
         </div>
 
-        <!-- Region Navigation Toggles -->
-        <div class="flex items-center gap-3 mb-10 overflow-x-auto pb-4 scrollbar-hide">
-            <span class="text-sm font-semibold text-gray-400 uppercase tracking-widest whitespace-nowrap mr-2">Região
-                Administrativa:</span>
-
+        <!-- City Navigation -->
+        <div class="flex items-center gap-3 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+            <span
+                class="text-sm font-semibold text-gray-400 uppercase tracking-widest whitespace-nowrap mr-2">Cidade:</span>
             <div class="flex gap-2">
-                @for (key of regionKeys; track key) {
-                <button (click)="setRegion(key)" [class.bg-green-700]="regionName === key"
-                    [class.text-white]="regionName === key" [class.shadow-md]="regionName === key"
-                    [class.border-green-700]="regionName === key" [class.bg-white]="regionName !== key"
-                    [class.text-gray-600]="regionName !== key" [class.border-gray-200]="regionName !== key"
-                    [class.hover:bg-green-50]="regionName !== key"
-                    class="px-5 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-300 whitespace-nowrap">
-                    {{ regionLabels[key] }}
+                @for (city of currentCities; track city.name) {
+                <button (click)="selectCity(city)" [class.bg-green-700]="selectedCityName === city.name"
+                    [class.text-white]="selectedCityName === city.name"
+                    [class.shadow-md]="selectedCityName === city.name"
+                    [class.border-green-700]="selectedCityName === city.name"
+                    [class.bg-white]="selectedCityName !== city.name"
+                    [class.text-gray-600]="selectedCityName !== city.name"
+                    [class.border-gray-200]="selectedCityName !== city.name"
+                    class="px-4 py-2 rounded-xl border text-sm font-semibold transition-all duration-300 whitespace-nowrap">
+                    {{ city.name }}
                 </button>
                 }
             </div>
         </div>
 
-        <header class="flex justify-between items-center mb-8">
-            <h2 class="text-3xl font-bold text-gray-800">Ilhas de Calor e Sustentabilidade DF</h2>
-        </header>
-
-        <!-- Loading State -->
+        <!-- Loading -->
         <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-20">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
-            <p class="text-gray-500 font-medium animate-pulse">Consultando Satélites e Sensores (Open-Meteo, IBGE,
-                MapBiomas)...
-            </p>
+            <p class="text-gray-500 font-medium animate-pulse">Consultando Open-Meteo e Open-Elevation...</p>
         </div>
 
-        <!-- Indicators Grid -->
-        <div *ngIf="!isLoading && indicators" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-            <!-- Temperature (Open-Meteo) -->
+        <!-- Indicator Cards -->
+        <div *ngIf="!isLoading" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Temperature -->
             <div
-                class="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl shadow-sm border border-red-100 p-6 flex flex-col relative overflow-hidden group hover:shadow-md transition-all">
+                class="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl shadow-sm border border-red-100 p-6 relative overflow-hidden group hover:shadow-md transition-all">
                 <div class="absolute -right-4 -top-4 text-red-200/50 group-hover:scale-110 transition-transform">
-                    <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-28 h-28" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
                     </svg>
                 </div>
-                <div class="relative z-10 flex items-start justify-between">
-                    <div>
-                        <h3 class="text-sm font-bold text-red-800 uppercase tracking-widest mb-1">Temperatura</h3>
-                        <p class="text-xs text-red-600 mb-4">Solo (0cm) / Superfície - Tempo Real</p>
+                <div class="relative z-10">
+                    <div class="flex items-start justify-between mb-2">
+                        <h3 class="text-sm font-bold text-red-800 uppercase tracking-widest">Temperatura</h3>
+                        <span
+                            class="bg-red-100 text-red-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-red-200">Open-Meteo</span>
                     </div>
-                    <span
-                        class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-red-200">Open-Meteo</span>
-                </div>
-                <div class="relative z-10 mt-auto">
-                    <div class="flex items-baseline space-x-2">
-                        <span class="text-5xl font-black text-red-600 tracking-tighter">{{ indicators.temperature
-                            }}</span>
-                    </div>
+                    <p class="text-4xl font-black text-red-600 tracking-tighter">{{ indicators.temperature }}</p>
                 </div>
             </div>
 
-            <!-- Flood Risk (Open-Meteo) -->
+            <!-- Flood Risk -->
             <div
-                class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl shadow-sm border border-blue-100 p-6 flex flex-col relative overflow-hidden group hover:shadow-md transition-all">
+                class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl shadow-sm border border-blue-100 p-6 relative overflow-hidden group hover:shadow-md transition-all">
                 <div class="absolute -right-4 -bottom-4 text-blue-200/50 group-hover:scale-110 transition-transform">
-                    <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24">
-                        <path
-                            d="M12 3c-1.3 2.5-4 5.7-4 8 0 2.2 1.8 4 4 4s4-1.8 4-4c0-2.3-2.7-5.5-4-8zM4.3 16.5c-1.3-1.6-1.3-4.2 0-6l1.4 1.4c-.6.8-.6 2.1 0 3l-1.4 1.6zM19.7 16.5l-1.4-1.6c.6-.9.6-2.2 0-3l1.4-1.4c1.3 1.8 1.3 4.4 0 6z" />
+                    <svg class="w-28 h-28" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 3c-1.3 2.5-4 5.7-4 8 0 2.2 1.8 4 4 4s4-1.8 4-4c0-2.3-2.7-5.5-4-8z" />
                     </svg>
                 </div>
-                <div class="relative z-10 flex items-start justify-between">
-                    <div>
-                        <h3 class="text-sm font-bold text-blue-800 uppercase tracking-widest mb-1">Risco de Alagamento
-                        </h3>
-                        <p class="text-xs text-blue-600 mb-4">Precipitação / Escoamento Superficial</p>
+                <div class="relative z-10">
+                    <div class="flex items-start justify-between mb-2">
+                        <h3 class="text-sm font-bold text-blue-800 uppercase tracking-widest">Alagamento</h3>
+                        <span
+                            class="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-blue-200">Open-Meteo</span>
                     </div>
-                    <span
-                        class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-blue-200">Open-Meteo</span>
-                </div>
-                <div class="relative z-10 mt-auto">
-                    <div class="flex items-baseline space-x-2">
-                        <span class="text-4xl font-black text-blue-600 tracking-tight">{{ indicators.floodRisk }}</span>
-                    </div>
+                    <p class="text-3xl font-black text-blue-600 tracking-tight">{{ indicators.floodRisk }}</p>
                 </div>
             </div>
 
-            <!-- Elevation (Open-Elevation) -->
+            <!-- Elevation -->
             <div
-                class="bg-gradient-to-br from-stone-50 to-stone-100 rounded-xl shadow-sm border border-stone-200 p-6 flex flex-col relative overflow-hidden group hover:shadow-md transition-all">
+                class="bg-gradient-to-br from-stone-50 to-stone-100 rounded-xl shadow-sm border border-stone-200 p-6 relative overflow-hidden group hover:shadow-md transition-all">
                 <div class="absolute -right-2 -bottom-6 text-stone-200/80 group-hover:scale-110 transition-transform">
-                    <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-28 h-28" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M14 6l-3.8 5 1.5 2 2.3-3 4.5 6H.5L10 3.5 14 6z" />
                     </svg>
                 </div>
-                <div class="relative z-10 flex items-start justify-between">
-                    <div>
-                        <h3 class="text-sm font-bold text-stone-800 uppercase tracking-widest mb-1">Altitude Média
-                            (Relevo)</h3>
-                        <p class="text-xs text-stone-600 mb-4">Centróide da RA</p>
+                <div class="relative z-10">
+                    <div class="flex items-start justify-between mb-2">
+                        <h3 class="text-sm font-bold text-stone-800 uppercase tracking-widest">Altitude</h3>
+                        <span
+                            class="bg-stone-200 text-stone-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-stone-300">Open-Elevation</span>
                     </div>
-                    <span
-                        class="bg-stone-200 text-stone-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-stone-300">Open-Elevation</span>
-                </div>
-                <div class="relative z-10 mt-auto">
-                    <div class="flex items-baseline space-x-2">
-                        <span class="text-5xl font-black text-stone-600 tracking-tighter">{{ indicators.elevation
-                            }}</span>
-                    </div>
+                    <p class="text-4xl font-black text-stone-600 tracking-tighter">{{ indicators.elevation }}</p>
                 </div>
             </div>
-
-            <!-- Population Density (IBGE) -->
-            <div
-                class="bg-gradient-to-br from-purple-50 to-fuchsia-50 rounded-xl shadow-sm border border-purple-100 p-6 flex flex-col relative overflow-hidden group hover:shadow-md transition-all">
-                <div class="absolute -right-4 -bottom-4 text-purple-200/50 group-hover:scale-110 transition-transform">
-                    <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24">
-                        <path
-                            d="M12 12c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4m0 2c-2.7 0-8 1.3-8 4v2h16v-2c0-2.7-5.3-4-8-4z" />
-                    </svg>
-                </div>
-                <div class="relative z-10 flex items-start justify-between">
-                    <div>
-                        <h3 class="text-sm font-bold text-purple-800 uppercase tracking-widest mb-1">População Estimada
-                        </h3>
-                        <p class="text-xs text-purple-600 mb-4">Pressão Antrópica na RA</p>
-                    </div>
-                    <span
-                        class="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-purple-200">IBGE</span>
-                </div>
-                <div class="relative z-10 mt-auto">
-                    <div class="flex items-baseline space-x-2">
-                        <span class="text-5xl font-black text-purple-600 tracking-tighter">{{ indicators.population
-                            }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Soil Sealing (MapBiomas) -->
-            <div
-                class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl shadow-sm border border-emerald-100 p-6 flex flex-col relative overflow-hidden group hover:shadow-md transition-all md:col-span-2 lg:col-span-2">
-                <div class="absolute right-0 top-0 h-full w-1/3 bg-emerald-100/30 transform -skew-x-12 translate-x-10">
-                </div>
-                <div class="relative z-10 flex items-start justify-between">
-                    <div>
-                        <h3 class="text-sm font-bold text-emerald-800 uppercase tracking-widest mb-1">Impermeabilização
-                            do Solo
-                        </h3>
-                        <p class="text-xs text-emerald-600 mb-4">Total de avanço de Área Urbana e Infraestrutura
-                            (Asfalto/Concreto) na RA</p>
-                    </div>
-                    <span
-                        class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-emerald-200">MapBiomas
-                        API</span>
-                </div>
-                <div class="relative z-10 mt-auto">
-                    <div class="flex items-center space-x-4">
-                        <div class="flex items-baseline space-x-1">
-                            <span class="text-6xl font-black text-emerald-600 tracking-tighter">{{
-                                indicators.soilSealing }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
-        <!-- Heat Islands Context Panel -->
-        <div *ngIf="!isLoading && indicators" class="mt-8 bg-green-50 border border-green-100 rounded-xl p-6 shadow-sm">
+        <!-- Temperature Timeline -->
+        <div *ngIf="!isLoading && timeline.length > 0"
+            class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800">📊 Timeline de Temperatura (7 dias)</h3>
+                    <p class="text-xs text-gray-500 mt-1">Dados históricos via Open-Meteo Forecast API</p>
+                </div>
+                <div class="flex items-center gap-4 text-xs">
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 bg-red-400 rounded-sm"></span>
+                        Máxima</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 bg-blue-400 rounded-sm"></span>
+                        Mínima</span>
+                </div>
+            </div>
+
+            <div class="flex items-end justify-between gap-2 h-48">
+                @for (point of timeline; track point.date) {
+                <div class="flex-1 flex flex-col items-center gap-1">
+                    <!-- Max Temp Bar -->
+                    <span class="text-[10px] font-bold text-red-600">{{ point.tempMax }}°</span>
+                    <div class="w-full bg-gradient-to-t from-red-400 to-orange-300 rounded-t-md transition-all duration-700"
+                        [style.height.%]="getBarHeight(point.tempMax)">
+                    </div>
+                    <!-- Min Temp Bar -->
+                    <div class="w-full bg-gradient-to-t from-blue-400 to-cyan-300 rounded-t-md transition-all duration-700"
+                        [style.height.%]="getBarHeight(point.tempMin)">
+                    </div>
+                    <span class="text-[10px] font-bold text-blue-600">{{ point.tempMin }}°</span>
+                    <!-- Date Label -->
+                    <span class="text-[9px] text-gray-500 mt-1 font-medium">{{ formatDate(point.date) }}</span>
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Context Panel -->
+        <div *ngIf="!isLoading" class="bg-green-50 border border-green-100 rounded-xl p-6 shadow-sm">
             <div class="flex items-start space-x-4">
                 <div class="bg-green-600 p-3 rounded-full text-white mt-1 shadow-sm shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -184,30 +150,14 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-xl font-bold text-green-900 mb-2">Por que visualizar essas métricas juntas em {{
-                        regionInfo.name }}?</h3>
-                    <p class="text-green-800 leading-relaxed mb-4">
-                        Segundo o <b>WRI Brasil</b>, as Ilhas de Calor Urbanas são fenômenos onde áreas densamente
-                        construídas retêm muito mais calor que as zonas rurais ao redor. A <b>impermeabilização</b>
-                        extrema exposta acima e a alta <b>população</b> agravam temperaturas extremas nas periferias do
-                        DF.
+                    <h3 class="text-xl font-bold text-green-900 mb-2">Por que esses dados importam?</h3>
+                    <p class="text-green-800 leading-relaxed">
+                        Segundo o <b>WRI Brasil</b>, as Ilhas de Calor Urbanas causam diferenças de até 8°C entre
+                        centros urbanos e áreas rurais adjacentes. A <b>impermeabilização do solo</b> e a falta de
+                        <b>infraestrutura verde</b> (telhados verdes, parques lineares, biovaletas) agravam esse
+                        problema. A timeline acima permite acompanhar como a <b>temperatura</b> oscila ao longo dos dias
+                        e justifica investimentos em <b>Soluções Baseadas na Natureza</b>.
                     </p>
-                    <div class="bg-white/50 rounded-lg p-4 border border-green-100/50">
-                        <h4 class="text-sm font-bold text-green-900 uppercase tracking-wide mb-2 flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            Oportunidade para Soluções Baseadas na Natureza (SBN)
-                        </h4>
-                        <p class="text-green-800/90 text-sm leading-relaxed">
-                            A mitigação pode ser alcançada aplicando <b>Infraestrutura Verde</b>: telhados verdes,
-                            parques lineares e calçadas drenantes. Essas medidas restauram a <b>permeabilidade</b>
-                            local, combatem os picos de <b>Temperatura</b> listados nos sensores espaciais, e
-                            consequentemente, mitigam o <b>Risco de Alagamento</b> evidenciado nas enxurradas durante as
-                            estações chuvosas.
-                        </p>
-                    </div>
                 </div>
             </div>
         </div>
