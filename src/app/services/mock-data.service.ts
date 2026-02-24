@@ -1,103 +1,124 @@
-import { Injectable } from '@angular/core';
-
-export interface ChartData {
-  labels: string[];
-  data: number[];
-}
-
-export interface BiomeInfo {
-  description: string;
-  relevance: string;
-}
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, forkJoin, map, catchError, of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MockDataService {
+  private http = inject(HttpClient);
 
-  constructor() { }
+  // Administrative Regions (RAs) of Distrito Federal
+  private regionCoordinates: Record<string, { lat: number, lng: number }> = {
+    'plano-piloto': { lat: -15.7938, lng: -47.8827 },
+    'taguatinga': { lat: -15.8333, lng: -48.0500 },
+    'ceilandia': { lat: -15.8233, lng: -48.1158 },
+    'samambaia': { lat: -15.8667, lng: -48.0667 },
+    'aguas-claras': { lat: -15.8368, lng: -48.0305 },
+    'sobradinho': { lat: -15.6547, lng: -47.7858 }
+  };
 
-  private countryData = {
-    vegetation: {
-      labels: ['Floresta', 'Form. Savânica', 'Agropecuária', 'Água/Outros'],
-      data: [490, 90, 240, 31]
+  private regionData: Record<string, { name: string, info: string, ibgeId: string }> = {
+    'plano-piloto': {
+      name: 'Plano Piloto',
+      ibgeId: '53001080506',
+      info: 'Apesar de altamente arborizada, as vastas extensões de asfalto do Eixo Monumental contribuem para o aquecimento diurno. Soluções Baseadas na Natureza (SBN) são recomendadas para parques lineares.'
     },
-    climate: {
-      labels: ['Pastagem', 'Agricultura', 'Cultivo Florestal'],
-      data: [160, 75, 5]
+    'taguatinga': {
+      name: 'Taguatinga',
+      ibgeId: '53001080508',
+      info: 'Região densamente povoada com alta impermeabilização do solo. Propensa à formação severa de Ilhas de Calor Urbanas. Investimentos físicos em tetos verdes e biovaletas são urgentes.'
     },
-    relief: {
-      labels: ['Antropizada', 'Nativa Conservada'],
-      data: [300, 550]
+    'ceilandia': {
+      name: 'Ceilândia',
+      ibgeId: '53001080515',
+      info: 'A RA com maior vulnerabilidade climática no DF devido à alta densidade e déficit de áreas verdes. A falta de árvores de rua potencializa o acúmulo de calor (WRI Brasil).'
+    },
+    'samambaia': {
+      name: 'Samambaia',
+      ibgeId: '53001080517', // Approximation, we fetched 10
+      info: 'Expansão urbana rápida tem selado o solo agressivamente. A infraestrutura cinza agrava riscos de enxurradas periféricas e picos de temperatura no verão.'
+    },
+    'aguas-claras': {
+      name: 'Águas Claras',
+      ibgeId: '53001080520',
+      info: 'A verticalização extrema bloqueia os ventos, criando cânions urbanos que retêm o calor noturno. Áreas permeáveis no parque central são o único sumidouro térmico.'
+    },
+    'sobradinho': {
+      name: 'Sobradinho',
+      ibgeId: '53001080510',
+      info: 'Localizada em uma cota mais alta, sofre menos com a temperatura média, mas o avanço de loteamentos irregulares impermeabiliza nascentes importantes.'
     }
   };
 
-  private biomeData: Record<string, any> = {
-    amazonia: {
-      vegetation: { labels: ['Floresta', 'Form. Savânica', 'Agropecuária', 'Água/Outros'], data: [330, 15, 50, 25] },
-      relief: { labels: ['Antropizada', 'Nativa Conservada'], data: [55, 365] },
-      info: {
-        description: 'A Amazônia é o maior bioma do Brasil e a maior floresta tropical do mundo, abrigando imensa biodiversidade e sendo vital para a regulação climática global.',
-        relevance: 'Monitorar a Cobertura de Terra aqui é vital porque a conversão de florestas primárias em áreas agropecuárias afeta o regime de chuvas. Os alertas de desmatamento refletem a pressão imediata sobre as bordas remanescentes.'
-      }
-    },
-    caatinga: {
-      vegetation: { labels: ['Floresta', 'Form. Savânica', 'Agropecuária', 'Água/Outros'], data: [5, 45, 35, 2] },
-      relief: { labels: ['Antropizada', 'Nativa Conservada'], data: [40, 47] },
-      info: {
-        description: 'Bioma exclusivamente brasileiro, a Caatinga possui vegetação adaptada a longos períodos de seca e abrange clima semiárido.',
-        relevance: 'A perda de vegetação na Caatinga acelera o processo de desertificação. Avaliar o balanço entre área antropizada e remanescente revela a resiliência do terreno contra as secas agudas.'
-      }
-    },
-    cerrado: {
-      vegetation: { labels: ['Floresta', 'Form. Savânica', 'Agropecuária', 'Água/Outros'], data: [20, 70, 100, 5] },
-      relief: { labels: ['Antropizada', 'Nativa Conservada'], data: [110, 85] },
-      info: {
-        description: 'O Cerrado é a savana mais biodiversa do mundo e berço das principais bacias hidrográficas do continente.',
-        relevance: 'É o bioma que sofre a mais rápida conversão de terras para expansão agrícola. Acompanhar a perda de formação savânica é o principal indicador para a conservação de nascentes d\'água no país.'
-      }
-    },
-    mataAtlantica: {
-      vegetation: { labels: ['Floresta', 'Form. Savânica', 'Agropecuária', 'Água/Outros'], data: [15, 2, 70, 3] },
-      relief: { labels: ['Antropizada', 'Nativa Conservada'], data: [75, 15] },
-      info: {
-        description: 'A Mata Atlântica é um bioma extremamente ameaçado que se estende ao longo da costa brasileira, abrigando grande parte da população.',
-        relevance: 'Com menos de 30% de remanescentes nativos, qualquer desmatamento adicional prejudica a provisão hídrica e a biodiversidade endêmica. Os indicadores focam em proteger as poucas áreas ainda conservadas.'
-      }
-    },
-    pampa: {
-      vegetation: { labels: ['Floresta', 'Form. Savânica', 'Agropecuária', 'Água/Outros'], data: [1, 25, 40, 2] },
-      relief: { labels: ['Antropizada', 'Nativa Conservada'], data: [42, 26] },
-      info: {
-        description: 'Localizado no extremo sul, o Pampa é caracterizado por imensas planícies cobertas de campos naturais.',
-        relevance: 'O bioma vem perdendo espaço rapidamente para plantações como monoculturas e pastagens artificiais. Monitorar os campos naturais (vegetação nativa conservada) previne a descaracterização ambiental sulista.'
-      }
-    },
-    pantanal: {
-      vegetation: { labels: ['Floresta', 'Form. Savânica', 'Agropecuária', 'Água/Outros'], data: [3, 10, 2, 12] },
-      relief: { labels: ['Antropizada', 'Nativa Conservada'], data: [3, 22] },
-      info: {
-        description: 'O Pantanal é a maior planície inundável do planeta, pulsando através dos ciclos de cheia e seca ao longo do ano.',
-        relevance: 'A ocupação antrópica e desmatamentos no planalto afetam a hidrodinâmica do Pantanal. Avaliar as áreas conservadas assegura a manutenção do ciclo de águas e do refúgio animal.'
-      }
-    }
-  };
+  // 1. Fetch Temperature Focus (Open-Meteo)
+  getTemperatureData(regionKey: string): Observable<string> {
+    const coords = this.regionCoordinates[regionKey] || this.regionCoordinates['plano-piloto'];
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,surface_temperature&timezone=America%2FSao_Paulo`;
 
-  getVegetationData(biome?: string): ChartData {
-    if (biome && this.biomeData[biome]) return this.biomeData[biome].vegetation;
-    return this.countryData.vegetation;
+    return this.http.get<any>(url).pipe(
+      map(res => `${res.current.surface_temperature || res.current.temperature_2m || '--'} °C`),
+      catchError(() => of('-- °C'))
+    );
   }
 
-  getReliefData(biome?: string): ChartData {
-    if (biome && this.biomeData[biome]) return this.biomeData[biome].relief;
-    return this.countryData.relief;
+  // 2. Fetch Flood Risk / Precipitation (Open-Meteo)
+  getFloodRiskData(regionKey: string): Observable<string> {
+    const coords = this.regionCoordinates[regionKey] || this.regionCoordinates['plano-piloto'];
+    // Using standard weather API for precipitation sum to infer risk as GloFAS is complex for generic coordinates
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&daily=precipitation_sum&timezone=America%2FSao_Paulo&forecast_days=1`;
+
+    return this.http.get<any>(url).pipe(
+      map(res => {
+        const precip = res.daily?.precipitation_sum?.[0] || 0;
+        if (precip > 50) return 'ALTO (Enxurrada)';
+        if (precip > 20) return 'MÉDIO (Atenção)';
+        return 'BAIXO (Seguro)';
+      }),
+      catchError(() => of('Indisponível'))
+    );
   }
 
-  getBiomeInfo(biome?: string): BiomeInfo {
-    if (biome && this.biomeData[biome]) return this.biomeData[biome].info;
-    return {
-      description: 'O Brasil é o país com a maior biodiversidade do mundo, abrangendo seis biomas terrestres distintos com imensa variedade climática e biológica.',
-      relevance: 'Monitorar os indicadores de desmatamento, cobertura de terra e expansão agropecuária em escala nacional é fundamental para cumprir metas climáticas.'
+  // 3. Fetch Elevation (Open-Elevation)
+  getElevationData(regionKey: string): Observable<string> {
+    const coords = this.regionCoordinates[regionKey] || this.regionCoordinates['plano-piloto'];
+    const url = `https://api.open-elevation.com/api/v1/lookup?locations=${coords.lat},${coords.lng}`;
+
+    return this.http.get<any>(url).pipe(
+      map(res => `${res.results[0].elevation} m`),
+      catchError(() => of('1000 m (Aprox)')) // Brasília average fallback
+    );
+  }
+
+  // 4. Fetch Population (IBGE API Simulation - specific endpoint requires complex query builder)
+  getPopulationData(regionKey: string): Observable<string> {
+    // We will return a static mock mapped to the reality of the RA to avoid the extremely complex IBGE SIDRA query builder
+    const popMap: Record<string, string> = {
+      'plano-piloto': '214.529 hab',
+      'taguatinga': '221.909 hab',
+      'ceilandia': '398.374 hab',
+      'samambaia': '254.439 hab',
+      'aguas-claras': '135.685 hab',
+      'sobradinho': '69.363 hab'
     };
+    return of(popMap[regionKey] || 'N/A');
+  }
+
+  // 5. Fetch Soil Sealing (MapBiomas GraphQL integration point)
+  getSoilSealingData(regionKey: string): Observable<string> {
+    // For now, representing the concept. Real GraphQL requires exact territory ID from MapBiomas which takes time to map.
+    const sealMap: Record<string, string> = {
+      'plano-piloto': '35% Impermeabilizado',
+      'taguatinga': '78% Impermeabilizado',
+      'ceilandia': '85% Impermeabilizado',
+      'samambaia': '68% Impermeabilizado',
+      'aguas-claras': '92% Impermeabilizado', // extreme verticalization
+      'sobradinho': '40% Impermeabilizado'
+    };
+    return of(sealMap[regionKey] || 'N/A');
+  }
+
+  getEnvironmentInfo(regionKey: string) {
+    return this.regionData[regionKey] || this.regionData['plano-piloto'];
   }
 }

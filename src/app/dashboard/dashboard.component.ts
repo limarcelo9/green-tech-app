@@ -14,111 +14,143 @@ export class DashboardComponent implements AfterViewInit {
 
   @ViewChild(GoogleMap, { static: false }) mapComponent!: GoogleMap;
 
-  // Google Maps configuration
-  center: google.maps.LatLngLiteral = { lat: -15.7938, lng: -47.8827 }; // Default to Brasília (Center)
-  zoom = 4;
+  // Initial Center: Brasília, DF
+  center: google.maps.LatLngLiteral = { lat: -15.7938, lng: -47.8827 };
+  zoom = 10;
+
   mapOptions: google.maps.MapOptions = {
-    mapTypeId: google.maps.MapTypeId.SATELLITE,
     disableDefaultUI: false,
     zoomControl: true,
-    mapId: 'DEMO_MAP_ID', // Requisito do Google para mapas Vetoriais/3D
-    tilt: 45, // Angulação inicial para criar o efeito 3D
-    heading: 90, // Direção da vista
-    rotateControl: true // Permitir rotacionar
+    mapId: 'DEMO_MAP_ID', // Requisito para 3D
+    tilt: 45,
+    heading: 90,
+    rotateControl: true,
+    mapTypeId: 'hybrid' // Base de Satelite do Gmaps
   };
 
-  // MapBiomas Layers Integration
-  mapBiomasLayers: { id: string, title: string, layerName: string, isActive: boolean, overlay: any }[] = [
-    { id: 'desmatamento', title: 'Desmatamento (Biomas)', layerName: 'mapbiomas-alertas:dashboard_biomes-static-layer', isActive: false, overlay: null },
-    { id: 'indigenous', title: 'Terras Indígenas', layerName: 'mapbiomas-alertas:dashboard_indigenous-lands-static-layer', isActive: false, overlay: null },
-    { id: 'conservation', title: 'Unidades de Conservação', layerName: 'mapbiomas-alertas:dashboard_conservation-unit-static-layer', isActive: false, overlay: null },
-    { id: 'quilombo', title: 'Áreas Quilombolas', layerName: 'mapbiomas-alertas:dashboard_quilombo-static-layer', isActive: false, overlay: null },
-    { id: 'settlements', title: 'Assentamentos', layerName: 'mapbiomas-alertas:dashboard_settlements-static-layer', isActive: false, overlay: null }
-  ];
+  // Multiple WMS Layers Dictionary
+  activeLayers: Record<string, boolean> = {
+    'biomes': false,
+    'indigenous': false,
+    'conservation': false,
+    'quilombo': false,
+    'settlements': false,
+    'nasaSatellite': false,
+    'nasaFires': false
+  };
 
-  ngOnInit() {
-    this.center = { lat: -14.235, lng: -51.925 };
-    this.zoom = 4;
-  }
+  private wmsOverlayMapTypes: Record<string, google.maps.ImageMapType> = {};
+
+  // Parallax transform
+  transformStyle = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
 
   ngAfterViewInit() {
-    // 3D Tilt Initialization
-    // Assuming mapContainer and bounds are defined elsewhere if needed for 3D tilt
-    // if (this.mapContainer && this.mapContainer.nativeElement) {
-    //   this.bounds = this.mapContainer.nativeElement.getBoundingClientRect();
-    // }
+    // Generate yesterday's date string for NASA GIBS TIME parameter
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 2); // -2 days to ensure NASA processing is finished globally
+    const timeStr = yesterday.toISOString().split('T')[0];
+
+    // Initialize MapBiomas and NASA GIBS Layers
+    this.wmsOverlayMapTypes['biomes'] = this.createWMSLayer('https://production.alerta.mapbiomas.org/geoserver/wms', 'mapbiomas-alertas:dashboard_biomes-static-layer', 0.8);
+    this.wmsOverlayMapTypes['indigenous'] = this.createWMSLayer('https://production.alerta.mapbiomas.org/geoserver/wms', 'mapbiomas-alertas:dashboard_indigenous-lands-static-layer', 0.8);
+    this.wmsOverlayMapTypes['conservation'] = this.createWMSLayer('https://production.alerta.mapbiomas.org/geoserver/wms', 'mapbiomas-alertas:dashboard_conservation-unit-static-layer', 0.8);
+    this.wmsOverlayMapTypes['quilombo'] = this.createWMSLayer('https://production.alerta.mapbiomas.org/geoserver/wms', 'mapbiomas-alertas:dashboard_quilombo-static-layer', 0.8);
+    this.wmsOverlayMapTypes['settlements'] = this.createWMSLayer('https://production.alerta.mapbiomas.org/geoserver/wms', 'mapbiomas-alertas:dashboard_settlements-static-layer', 0.8);
+
+    // NASA GIBS Layers (Requires EPSG:4326 and TIME)
+    this.wmsOverlayMapTypes['nasaSatellite'] = this.createNasaLayer('MODIS_Terra_CorrectedReflectance_TrueColor', timeStr, 1.0);
+    this.wmsOverlayMapTypes['nasaFires'] = this.createNasaLayer('MODIS_Terra_Thermal_Anomalies_All', timeStr, 1.0);
   }
 
-  toggleLayer(layerId: string) {
-    const layer = this.mapBiomasLayers.find(l => l.id === layerId);
-    if (!layer || !this.mapComponent || !this.mapComponent.googleMap) return;
+  private createWMSLayer(baseUrl: string, layerName: string, opacity: number): google.maps.ImageMapType {
+    return new google.maps.ImageMapType({
+      getTileUrl: (coord, zoom) => {
+        const proj = this.mapComponent.googleMap?.getProjection();
+        if (!proj) return null;
+        const zfactor = Math.pow(2, zoom);
 
-    layer.isActive = !layer.isActive;
+        // Standard EPSG:4326 BBox calc for Google Maps
+        const top = proj.fromPointToLatLng(new google.maps.Point(coord.x * 256 / zfactor, coord.y * 256 / zfactor));
+        const bot = proj.fromPointToLatLng(new google.maps.Point((coord.x + 1) * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
+        if (!top || !bot) return null;
+
+        const bbox = `${top.lng()},${bot.lat()},${bot.lng()},${top.lat()}`;
+        return `${baseUrl}?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=true&LAYERS=${layerName}&STYLES=&WIDTH=256&HEIGHT=256&SRS=EPSG:4326&BBOX=${bbox}`;
+      },
+      tileSize: new google.maps.Size(256, 256),
+      opacity: opacity
+    });
+  }
+
+  private createNasaLayer(layerName: string, time: string, opacity: number): google.maps.ImageMapType {
+    // NASA GIBS Web Mercator Projection (EPSG:3857) WMS
+    return new google.maps.ImageMapType({
+      getTileUrl: (coord, zoom) => {
+        const proj = this.mapComponent.googleMap?.getProjection();
+        if (!proj) return null;
+        const zfactor = Math.pow(2, zoom);
+
+        const top = proj.fromPointToLatLng(new google.maps.Point(coord.x * 256 / zfactor, coord.y * 256 / zfactor));
+        const bot = proj.fromPointToLatLng(new google.maps.Point((coord.x + 1) * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
+        if (!top || !bot) return null;
+
+        const bbox = `${top.lng()},${bot.lat()},${bot.lng()},${top.lat()}`;
+        return `https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=true&LAYERS=${layerName}&TIME=${time}&STYLES=&WIDTH=256&HEIGHT=256&SRS=EPSG:4326&BBOX=${bbox}`;
+      },
+      tileSize: new google.maps.Size(256, 256),
+      opacity: opacity
+    });
+  }
+
+  toggleLayer(layerKey: string) {
+    if (!this.mapComponent || !this.mapComponent.googleMap) return;
+
+    this.activeLayers[layerKey] = !this.activeLayers[layerKey];
     const map = this.mapComponent.googleMap;
+    const overlayMapTypes = map.overlayMapTypes;
 
-    if (layer.isActive) {
-      // Create new WMS layer instance if enabling
-      layer.overlay = new google.maps.ImageMapType({
-        getTileUrl: (coord, zoom) => {
-          const proj = map.getProjection();
-          if (!proj) return null;
-          const zfactor = Math.pow(2, zoom);
-
-          const top = proj.fromPointToLatLng(new google.maps.Point(coord.x * 256 / zfactor, coord.y * 256 / zfactor));
-          const bot = proj.fromPointToLatLng(new google.maps.Point((coord.x + 1) * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
-
-          if (!top || !bot) return null;
-
-          const bbox = `${top.lng()},${bot.lat()},${bot.lng()},${top.lat()}`;
-          return `https://production.alerta.mapbiomas.org/geoserver/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=true&LAYERS=${layer.layerName}&STYLES=&WIDTH=256&HEIGHT=256&SRS=EPSG:4326&BBOX=${bbox}`;
-        },
-        tileSize: new google.maps.Size(256, 256),
-        opacity: 0.8
-      });
-      map.overlayMapTypes.push(layer.overlay);
+    // Custom logic to add/remove the specific ImageMapType from the MVCArray
+    if (this.activeLayers[layerKey]) {
+      // Add layer
+      overlayMapTypes.push(this.wmsOverlayMapTypes[layerKey]);
     } else {
-      // Remove layer if disabling
-      const overlays = map.overlayMapTypes.getArray();
-      for (let i = 0; i < overlays.length; i++) {
-        if (overlays[i] === layer.overlay) {
-          map.overlayMapTypes.removeAt(i);
-          layer.overlay = null;
+      // Find and remove layer
+      for (let i = 0; i < overlayMapTypes.getLength(); i++) {
+        if (overlayMapTypes.getAt(i) === this.wmsOverlayMapTypes[layerKey]) {
+          overlayMapTypes.removeAt(i);
           break;
         }
       }
     }
   }
 
-  setMapType(type: 'roadmap' | 'satellite' | 'hybrid' | 'terrain') {
-    this.mapOptions = {
-      ...this.mapOptions,
-      mapTypeId: type as unknown as google.maps.MapTypeId
-    };
-  }
-
-  // Predefined Brazil Biomes & Markers
-  biomes: Record<string, { lat: number, lng: number, zoom: number, title: string }> = {
-    amazonia: { lat: -3.7327, lng: -60.9169, zoom: 5, title: 'Amazônia' },
-    caatinga: { lat: -6.9023, lng: -39.0436, zoom: 6, title: 'Caatinga' },
-    cerrado: { lat: -15.7938, lng: -47.8827, zoom: 6, title: 'Cerrado' },
-    mataAtlantica: { lat: -21.0, lng: -46.0, zoom: 6, title: 'Mata Atlântica' },
-    pampa: { lat: -30.0346, lng: -51.2177, zoom: 6, title: 'Pampa' },
-    pantanal: { lat: -19.0, lng: -56.5, zoom: 6, title: 'Pantanal' }
+  // Predefined Distrito Federal Administrative Regions (RAs)
+  dfRegions: Record<string, { lat: number, lng: number, zoom: number, title: string }> = {
+    'plano-piloto': { lat: -15.7938, lng: -47.8827, zoom: 12, title: 'Plano Piloto' },
+    'taguatinga': { lat: -15.8333, lng: -48.0500, zoom: 13, title: 'Taguatinga' },
+    'ceilandia': { lat: -15.8233, lng: -48.1158, zoom: 13, title: 'Ceilândia' },
+    'samambaia': { lat: -15.8667, lng: -48.0667, zoom: 13, title: 'Samambaia' },
+    'aguas-claras': { lat: -15.8368, lng: -48.0305, zoom: 14, title: 'Águas Claras' },
+    'sobradinho': { lat: -15.6547, lng: -47.7858, zoom: 13, title: 'Sobradinho' }
   };
 
   // Keep track of the keys for iteration in template
-  biomeKeys = Object.keys(this.biomes);
+  regionKeys = Object.keys(this.dfRegions);
 
-  setBiome(biomeKey: string) {
-    const biome = this.biomes[biomeKey];
-    if (biome) {
-      this.center = { lat: biome.lat, lng: biome.lng };
-      this.zoom = biome.zoom;
+  setMapType(mapTypeId: string) {
+    this.mapOptions.mapTypeId = mapTypeId;
+  }
+
+  setRegion(regionKey: string) {
+    const region = this.dfRegions[regionKey];
+    if (region) {
+      this.center = { lat: region.lat, lng: region.lng };
+      this.zoom = region.zoom;
     }
   }
 
-  navigateToBiome(biomeKey: string) {
-    this.router.navigate(['/analytics', biomeKey]);
+  navigateToRegion(regionKey: string) {
+    this.router.navigate(['/analytics', regionKey]);
   }
 
   // 3D Parallax logic

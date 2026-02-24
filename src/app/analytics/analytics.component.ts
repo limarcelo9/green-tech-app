@@ -1,128 +1,99 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, ChartData } from 'chart.js';
+import { ActivatedRoute } from '@angular/router';
 import { MockDataService } from '../services/mock-data.service';
 
 @Component({
   selector: 'app-analytics',
   standalone: true,
-  imports: [CommonModule, BaseChartDirective, RouterLink],
+  imports: [CommonModule],
   templateUrl: './analytics.component.html',
   styleUrl: './analytics.component.css'
 })
 export class AnalyticsComponent implements OnInit {
   private route = inject(ActivatedRoute);
-  private http = inject(HttpClient);
-
   private dataService = inject(MockDataService);
 
-  biomeName: string = 'Brasil';
-  biomeInfo: { description: string, relevance: string } | null = null;
+  regionName: string = 'plano-piloto';
+  isLoading = true;
 
-  // MapBiomas Translators
-  private biomeKeyMap: Record<string, string> = {
-    amazonia: 'Amazônia',
-    caatinga: 'Caatinga',
-    cerrado: 'Cerrado',
-    mataAtlantica: 'Mata Atlântica',
-    pampa: 'Pampa',
-    pantanal: 'Pantanal'
+  // New Indicators Data Structure
+  indicators = {
+    temperature: '-- °C',
+    floodRisk: 'Carregando...',
+    elevation: '-- m',
+    population: '... hab',
+    soilSealing: '... %' // Using mapbiomas concept simulation
   };
 
-  // Chart Configurations
-  vegetationChartOptions: ChartConfiguration['options'] = { responsive: true, plugins: { legend: { position: 'bottom' } } };
-  climateChartOptions: ChartConfiguration['options'] = { responsive: true, plugins: { legend: { position: 'bottom' } } };
-  reliefChartOptions: ChartConfiguration['options'] = { responsive: true, plugins: { legend: { position: 'bottom' } } };
+  regionInfo = {
+    name: 'Plano Piloto',
+    info: 'Apesar de altamente arborizada, as vastas extensões de asfalto do Eixo Monumental contribuem para o aquecimento diurno.',
+    ibgeId: '?'
+  };
 
-  vegetationChartData: ChartData<'pie'> = { labels: [], datasets: [] };
-  climateChartData: ChartData<'bar'> = { labels: [], datasets: [] };
-  reliefChartData: ChartData<'doughnut'> = { labels: [], datasets: [] };
+  // Supported DF Regions map
+  regionKeys = ['plano-piloto', 'taguatinga', 'ceilandia', 'samambaia', 'aguas-claras', 'sobradinho'];
 
-  ngOnInit(): void {
+  // Mapeamento amigável para exibição nos botões
+  regionLabels: Record<string, string> = {
+    'plano-piloto': 'Plano Piloto',
+    'taguatinga': 'Taguatinga',
+    'ceilandia': 'Ceilândia',
+    'samambaia': 'Samambaia',
+    'aguas-claras': 'Águas Claras',
+    'sobradinho': 'Sobradinho'
+  };
+
+  ngOnInit() {
     this.route.paramMap.subscribe(params => {
-      const biomeParam = params.get('region');
-
-      if (biomeParam && this.biomeKeyMap[biomeParam]) {
-        this.biomeName = this.biomeKeyMap[biomeParam];
+      const region = params.get('region');
+      if (region && this.regionKeys.includes(region)) {
+        this.setRegion(region);
       } else {
-        this.biomeName = 'Todos os Biomas (Brasil)';
+        this.setRegion('plano-piloto');
       }
-
-      this.loadMockData(biomeParam || undefined);
-      this.fetchMapBiomasData(this.biomeName);
     });
   }
 
-  private loadMockData(biomeKey?: string) {
-    const landCoverData = this.dataService.getVegetationData(biomeKey);
-    const nativeLossData = this.dataService.getReliefData(biomeKey);
-    this.biomeInfo = this.dataService.getBiomeInfo(biomeKey);
-
-    // 1. Cobertura de Terra (Pie Chart)
-    this.vegetationChartData = {
-      labels: landCoverData.labels,
-      datasets: [{
-        data: landCoverData.data,
-        backgroundColor: ['#166534', '#eab308', '#f97316', '#3b82f6']
-      }]
-    };
-
-    // 2. Vegetação Nativa vs Área Antropizada (Doughnut Chart)
-    this.reliefChartData = {
-      labels: nativeLossData.labels,
-      datasets: [{
-        data: nativeLossData.data,
-        backgroundColor: ['#ef4444', '#22c55e']
-      }]
-    };
+  setRegion(region: string) {
+    this.regionName = region;
+    this.isLoading = true;
+    this.fetchEnvironmentData(region);
   }
 
-  private fetchMapBiomasData(biomeName: string) {
-    const query = `
-      query {
-        alertStatusByBiomes {
-          biome
-          total
-        }
-      }
-    `;
+  private fetchEnvironmentData(region: string) {
+    // 1. Get Static Meta Info
+    this.regionInfo = this.dataService.getEnvironmentInfo(region);
 
-    this.http.post<any>('https://plataforma.alerta.mapbiomas.org/api/v2/graphql', { query }).subscribe({
-      next: (response) => {
-        const data = response?.data?.alertStatusByBiomes;
-        if (!data || !Array.isArray(data)) return;
+    // 2. Fetch Public APIs via Service (Simulating network delay for UI effect)
+    setTimeout(() => {
+      // Temperature
+      this.dataService.getTemperatureData(region).subscribe(data => {
+        this.indicators.temperature = data;
+      });
 
-        let aggregatedData = { total: 0 };
+      // Flood Risk
+      this.dataService.getFloodRiskData(region).subscribe(data => {
+        this.indicators.floodRisk = data;
+      });
 
-        if (biomeName === 'Todos os Biomas (Brasil)') {
-          aggregatedData = data.reduce((acc: any, curr: any) => ({
-            total: acc.total + (curr.total || 0),
-          }), { total: 0 });
-        } else {
-          const filteredData = data.filter((b: any) => b.biome === biomeName);
-          aggregatedData = filteredData.reduce((acc: any, curr: any) => ({
-            total: acc.total + (curr.total || 0),
-          }), { total: 0 });
-        }
+      // Elevation
+      this.dataService.getElevationData(region).subscribe(data => {
+        this.indicators.elevation = data;
+      });
 
-        this.updateTotalAlertsChart(aggregatedData);
-      },
-      error: (err) => console.error('Erro ao buscar MapBiomas:', err)
-    });
-  }
+      // Population
+      this.dataService.getPopulationData(region).subscribe(data => {
+        this.indicators.population = data;
+      });
 
-  private updateTotalAlertsChart(biomeData: any) {
-    // 3. Resumo Total (Bar Chart) - GraphQL Real Data
-    this.climateChartData = {
-      labels: ['Total de Alertas Detectados'],
-      datasets: [{
-        data: [biomeData.total || 0],
-        label: 'Quantidade de alertas de desmatamento',
-        backgroundColor: '#4f46e5'
-      }]
-    };
+      // Soil Sealing
+      this.dataService.getSoilSealingData(region).subscribe(data => {
+        this.indicators.soilSealing = data;
+      });
+
+      this.isLoading = false;
+    }, 800);
   }
 }
