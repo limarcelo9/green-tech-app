@@ -120,8 +120,9 @@ export class AnalyticsComponent implements OnInit {
     });
   }
 
-  getBarHeight(temp: number): number {
-    return Math.max(5, (temp / this.timelineMax) * 100);
+  getBarHeightPx(temp: number): number {
+    // Max bar height = 120px, scale proportionally
+    return Math.max(8, (temp / this.timelineMax) * 120);
   }
 
   formatDate(dateStr: string): string {

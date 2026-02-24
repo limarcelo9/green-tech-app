@@ -113,28 +113,34 @@
                     <p class="text-xs text-gray-500 mt-1">Dados históricos via Open-Meteo Forecast API</p>
                 </div>
                 <div class="flex items-center gap-4 text-xs">
-                    <span class="flex items-center gap-1"><span class="w-3 h-3 bg-red-400 rounded-sm"></span>
+                    <span class="flex items-center gap-1"><span
+                            class="w-3 h-3 bg-red-400 rounded-sm inline-block"></span>
                         Máxima</span>
-                    <span class="flex items-center gap-1"><span class="w-3 h-3 bg-blue-400 rounded-sm"></span>
+                    <span class="flex items-center gap-1"><span
+                            class="w-3 h-3 bg-blue-400 rounded-sm inline-block"></span>
                         Mínima</span>
                 </div>
             </div>
 
-            <div class="flex items-end justify-between gap-2 h-48">
+            <div class="flex items-end gap-3" style="height: 220px;">
                 @for (point of timeline; track point.date) {
-                <div class="flex-1 flex flex-col items-center gap-1">
+                <div class="flex-1 flex flex-col items-center h-full justify-end">
+                    <!-- Max Temp Label -->
+                    <span class="text-[11px] font-bold text-red-600 mb-1">{{ point.tempMax }}°</span>
                     <!-- Max Temp Bar -->
-                    <span class="text-[10px] font-bold text-red-600">{{ point.tempMax }}°</span>
-                    <div class="w-full bg-gradient-to-t from-red-400 to-orange-300 rounded-t-md transition-all duration-700"
-                        [style.height.%]="getBarHeight(point.tempMax)">
+                    <div class="w-4/5 max-w-[40px] bg-gradient-to-t from-red-500 to-orange-300 rounded-t-md shadow-sm"
+                        [style.height.px]="getBarHeightPx(point.tempMax)">
                     </div>
+                    <!-- Gap -->
+                    <div class="h-1"></div>
                     <!-- Min Temp Bar -->
-                    <div class="w-full bg-gradient-to-t from-blue-400 to-cyan-300 rounded-t-md transition-all duration-700"
-                        [style.height.%]="getBarHeight(point.tempMin)">
+                    <div class="w-4/5 max-w-[40px] bg-gradient-to-t from-blue-500 to-cyan-300 rounded-t-md shadow-sm"
+                        [style.height.px]="getBarHeightPx(point.tempMin)">
                     </div>
-                    <span class="text-[10px] font-bold text-blue-600">{{ point.tempMin }}°</span>
-                    <!-- Date Label -->
-                    <span class="text-[9px] text-gray-500 mt-1 font-medium">{{ formatDate(point.date) }}</span>
+                    <!-- Min Temp Label -->
+                    <span class="text-[11px] font-bold text-blue-600 mt-1">{{ point.tempMin }}°</span>
+                    <!-- Date -->
+                    <span class="text-[10px] text-gray-500 mt-1 font-medium">{{ formatDate(point.date) }}</span>
                 </div>
                 }
             </div>
