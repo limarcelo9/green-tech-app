@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { BaseChartDirective } from 'ng2-charts';
-import { MockDataService, ChartData } from '../services/mock-data.service';
-import { ChartConfiguration, ChartOptions, ChartType } from 'chart.js';
+import { MockDataService } from '../services/mock-data.service';
+import { ChartConfiguration, ChartOptions } from 'chart.js';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-analytics',
@@ -10,41 +11,64 @@ import { ChartConfiguration, ChartOptions, ChartType } from 'chart.js';
   templateUrl: './analytics.component.html',
   styleUrl: './analytics.component.css'
 })
-export class AnalyticsComponent {
+export class AnalyticsComponent implements OnInit {
   private dataService = inject(MockDataService);
+  private route = inject(ActivatedRoute);
 
-  private vegetation = this.dataService.getVegetationData();
-  private climate = this.dataService.getClimateData();
-  private relief = this.dataService.getReliefData();
+  public regionName: string = 'Brasil';
 
-  // Vegetation Pie Chart
-  public vegetationChartData: ChartConfiguration<'pie'>['data'] = {
-    labels: this.vegetation.labels,
-    datasets: [{
-      data: this.vegetation.data,
-      backgroundColor: ['#166534', '#15803d', '#16a34a', '#22c55e', '#4ade80', '#86efac']
-    }]
-  };
+  // Chart Data Holders
+  public vegetationChartData!: ChartConfiguration<'pie'>['data'];
   public vegetationChartOptions: ChartOptions<'pie'> = { responsive: true };
 
-  // Climate Bar Chart
-  public climateChartData: ChartConfiguration<'bar'>['data'] = {
-    labels: this.climate.labels,
-    datasets: [{
-      data: this.climate.data,
-      label: 'Cobertura Climática (%)',
-      backgroundColor: '#f59e0b'
-    }]
-  };
+  public climateChartData!: ChartConfiguration<'bar'>['data'];
   public climateChartOptions: ChartOptions<'bar'> = { responsive: true };
 
-  // Relief Doughnut Chart
-  public reliefChartData: ChartConfiguration<'doughnut'>['data'] = {
-    labels: this.relief.labels,
-    datasets: [{
-      data: this.relief.data,
-      backgroundColor: ['#64748b', '#94a3b8', '#cbd5e1']
-    }]
-  };
+  public reliefChartData!: ChartConfiguration<'doughnut'>['data'];
   public reliefChartOptions: ChartOptions<'doughnut'> = { responsive: true };
+
+  ngOnInit(): void {
+    // Read the region from route e.g. /analytics/nordeste
+    this.route.paramMap.subscribe(params => {
+      const regionParam = params.get('region');
+      if (regionParam) {
+        // Format the string roughly to title case for display
+        this.regionName = regionParam.charAt(0).toUpperCase() + regionParam.slice(1);
+      } else {
+        this.regionName = 'Brasil';
+      }
+      this.loadData(regionParam || undefined);
+    });
+  }
+
+  private loadData(region?: string) {
+    const vegData = this.dataService.getVegetationData(region);
+    const climData = this.dataService.getClimateData(region);
+    const relData = this.dataService.getReliefData(region);
+
+    this.vegetationChartData = {
+      labels: vegData.labels,
+      datasets: [{
+        data: vegData.data,
+        backgroundColor: ['#166534', '#15803d', '#16a34a', '#22c55e', '#4ade80', '#86efac']
+      }]
+    };
+
+    this.climateChartData = {
+      labels: climData.labels,
+      datasets: [{
+        data: climData.data,
+        label: 'Cobertura Climática (%)',
+        backgroundColor: '#f59e0b'
+      }]
+    };
+
+    this.reliefChartData = {
+      labels: relData.labels,
+      datasets: [{
+        data: relData.data,
+        backgroundColor: ['#64748b', '#94a3b8', '#cbd5e1']
+      }]
+    };
+  }
 }

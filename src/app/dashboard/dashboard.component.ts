@@ -1,17 +1,20 @@
-import { Component } from '@angular/core';
-import { GoogleMap } from '@angular/google-maps';
+import { Component, inject } from '@angular/core';
+import { GoogleMap, MapMarker } from '@angular/google-maps';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [GoogleMap],
+  imports: [GoogleMap, MapMarker],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
 export class DashboardComponent {
+  private router = inject(Router);
+
   // Google Maps configuration
-  center: google.maps.LatLngLiteral = { lat: -23.5505, lng: -46.6333 }; // Default to São Paulo
-  zoom = 12;
+  center: google.maps.LatLngLiteral = { lat: -15.7938, lng: -47.8827 }; // Default to Brasília (Center)
+  zoom = 4;
   mapOptions: google.maps.MapOptions = {
     mapTypeId: google.maps.MapTypeId.SATELLITE,
     disableDefaultUI: false,
@@ -29,14 +32,17 @@ export class DashboardComponent {
     };
   }
 
-  // Predefined Brazil Regions
-  regions: Record<string, { lat: number, lng: number, zoom: number }> = {
-    norte: { lat: -3.7327, lng: -60.9169, zoom: 5 }, // Amazonas/Norte
-    nordeste: { lat: -6.9023, lng: -39.0436, zoom: 6 }, // Ceará/Nordeste
-    centroOeste: { lat: -15.7938, lng: -47.8827, zoom: 6 }, // Brasília/Centro-Oeste
-    sudeste: { lat: -21.0, lng: -46.0, zoom: 6 }, // São Paulo-Minas/Sudeste
-    sul: { lat: -27.5953, lng: -52.0, zoom: 6 } // SC/Sul
+  // Predefined Brazil Regions & Markers
+  regions: Record<string, { lat: number, lng: number, zoom: number, title: string }> = {
+    norte: { lat: -3.7327, lng: -60.9169, zoom: 5, title: 'Norte' }, // Amazonas/Norte
+    nordeste: { lat: -6.9023, lng: -39.0436, zoom: 6, title: 'Nordeste' }, // Ceará/Nordeste
+    centroOeste: { lat: -15.7938, lng: -47.8827, zoom: 6, title: 'Centro-Oeste' }, // Brasília/Centro-Oeste
+    sudeste: { lat: -21.0, lng: -46.0, zoom: 6, title: 'Sudeste' }, // São Paulo-Minas/Sudeste
+    sul: { lat: -27.5953, lng: -52.0, zoom: 6, title: 'Sul' } // SC/Sul
   };
+
+  // Keep track of the keys for iteration in template
+  regionKeys = Object.keys(this.regions);
 
   setRegion(regionKey: string) {
     const region = this.regions[regionKey];
@@ -44,6 +50,10 @@ export class DashboardComponent {
       this.center = { lat: region.lat, lng: region.lng };
       this.zoom = region.zoom;
     }
+  }
+
+  navigateToRegion(regionKey: string) {
+    this.router.navigate(['/analytics', regionKey]);
   }
 
   // 3D Parallax logic
