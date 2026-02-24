@@ -1,0 +1,40 @@
+<header class="flex justify-between items-center mb-8">
+    <h2 class="text-3xl font-bold text-gray-800">Analytics - Visão Geral do Brasil</h2>
+</header>
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+    <!-- Vegetation Chart -->
+    <div
+        class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col hover:shadow-md transition-shadow">
+        <h3 class="text-lg font-semibold text-gray-700 mb-4">Mapeamento de Vegetação</h3>
+        <div class="flex-1 min-h-[300px] flex items-center justify-center">
+            <canvas baseChart [data]="vegetationChartData" [options]="vegetationChartOptions" [type]="'pie'">
+            </canvas>
+        </div>
+        <p class="text-sm text-gray-500 mt-4 text-center">Distribuição dos biomas brasileiros.</p>
+    </div>
+
+    <!-- Climate Chart -->
+    <div
+        class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col hover:shadow-md transition-shadow">
+        <h3 class="text-lg font-semibold text-gray-700 mb-4">Climas Predominantes</h3>
+        <div class="flex-1 min-h-[300px] flex items-center justify-center">
+            <canvas baseChart [data]="climateChartData" [options]="climateChartOptions" [type]="'bar'">
+            </canvas>
+        </div>
+        <p class="text-sm text-gray-500 mt-4 text-center">Principais faixas climáticas em %.</p>
+    </div>
+
+    <!-- Relief Chart -->
+    <div
+        class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col hover:shadow-md transition-shadow">
+        <h3 class="text-lg font-semibold text-gray-700 mb-4">Tipos de Relevo</h3>
+        <div class="flex-1 min-h-[300px] flex items-center justify-center">
+            <canvas baseChart [data]="reliefChartData" [options]="reliefChartOptions" [type]="'doughnut'">
+            </canvas>
+        </div>
+        <p class="text-sm text-gray-500 mt-4 text-center">Divisão topográfica nacional.</p>
+    </div>
+
+</div>
