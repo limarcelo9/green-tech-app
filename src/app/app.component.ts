@@ -20,4 +20,11 @@ export class AppComponent {
     disableDefaultUI: false,
     zoomControl: true,
   };
+
+  setMapType(type: 'roadmap' | 'satellite' | 'hybrid' | 'terrain') {
+    this.mapOptions = {
+      ...this.mapOptions,
+      mapTypeId: type as unknown as google.maps.MapTypeId
+    };
+  }
 }

@@ -74,8 +74,37 @@
       </button>
     </header>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 w-full h-[500px] overflow-hidden">
-      <google-map height="100%" width="100%" [center]="center" [zoom]="zoom" [options]="mapOptions"></google-map>
+    <div
+      class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 w-full h-[500px] overflow-hidden flex flex-col">
+      <!-- Map Controls -->
+      <div class="flex gap-2 mb-3">
+        <button (click)="setMapType('satellite')" [class.bg-green-600]="mapOptions.mapTypeId === 'satellite'"
+          [class.text-white]="mapOptions.mapTypeId === 'satellite'"
+          [class.bg-gray-100]="mapOptions.mapTypeId !== 'satellite'"
+          [class.text-gray-700]="mapOptions.mapTypeId !== 'satellite'"
+          class="px-4 py-2 rounded-md text-sm font-medium hover:bg-green-500 hover:text-white transition-colors">
+          Satellite
+        </button>
+        <button (click)="setMapType('roadmap')" [class.bg-green-600]="mapOptions.mapTypeId === 'roadmap'"
+          [class.text-white]="mapOptions.mapTypeId === 'roadmap'"
+          [class.bg-gray-100]="mapOptions.mapTypeId !== 'roadmap'"
+          [class.text-gray-700]="mapOptions.mapTypeId !== 'roadmap'"
+          class="px-4 py-2 rounded-md text-sm font-medium hover:bg-green-500 hover:text-white transition-colors">
+          Roadmap
+        </button>
+        <button (click)="setMapType('terrain')" [class.bg-green-600]="mapOptions.mapTypeId === 'terrain'"
+          [class.text-white]="mapOptions.mapTypeId === 'terrain'"
+          [class.bg-gray-100]="mapOptions.mapTypeId !== 'terrain'"
+          [class.text-gray-700]="mapOptions.mapTypeId !== 'terrain'"
+          class="px-4 py-2 rounded-md text-sm font-medium hover:bg-green-500 hover:text-white transition-colors">
+          Terrain
+        </button>
+      </div>
+
+      <!-- Map Provider -->
+      <div class="flex-1 w-full rounded-lg overflow-hidden border border-gray-200">
+        <google-map height="100%" width="100%" [center]="center" [zoom]="zoom" [options]="mapOptions"></google-map>
+      </div>
     </div>
 
   </main>
