@@ -47,7 +47,10 @@ export class AnalyticsComponent implements OnInit {
   // Simulation
   selectedSetorIndex = 0;
   cenario: Cenario = 'medio';
-  simInput = { aumentoCoberturaArborea: 15, reducaoImpermeabilizacao: 10, aumentoAreaVerde: 10 };
+  simInput = {
+    aumentoCoberturaArborea: 15, reducaoImpermeabilizacao: 10, aumentoAreaVerde: 10,
+    telhadosVerdes: 10, telhadosFrios: 20, pavimentosFrios: 15
+  };
   simResult: SimulationResult | null = null;
 
   // Sensitivity

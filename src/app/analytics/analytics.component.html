@@ -155,12 +155,16 @@
                 <!-- Controls -->
                 <div
                     class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-                    <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">⚙️ Parâmetros de Intervenção
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">⚙️ Parâmetros de Intervenção
                     </h3>
-                    <!-- Setor select -->
-                    <div class="mb-5">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Fonte: <a
+                            href="https://www.wribrasil.org.br/noticias/impactos-calor-urbano-cidades-solucoes-passivas-natureza-adaptacao"
+                            target="_blank" class="text-green-600 underline">WRI Brasil (2025)</a></p>
+                    <!-- RA select -->
+                    <div class="mb-4">
                         <label
-                            class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 block">Setor</label>
+                            class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 block">Região
+                            Administrativa</label>
                         <select [(ngModel)]="selectedSetorIndex" (ngModelChange)="runSimulation()"
                             class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200">
                             @for (setor of setoresIPA; track setor.id_ra; let i = $index) {
@@ -169,9 +173,9 @@
                         </select>
                     </div>
                     <!-- Cenário -->
-                    <div class="mb-5">
+                    <div class="mb-4">
                         <label
-                            class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 block">Cenário</label>
+                            class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 block">Cenário</label>
                         <div class="flex gap-2">
                             <button (click)="cenario = 'conservador'; runSimulation()"
                                 [class]="cenario === 'conservador' ? 'flex-1 px-3 py-2 bg-green-600 text-white text-xs font-bold rounded-lg' : 'flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700'">Conservador</button>
@@ -181,12 +185,15 @@
                                 [class]="cenario === 'agressivo' ? 'flex-1 px-3 py-2 bg-green-600 text-white text-xs font-bold rounded-lg' : 'flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700'">Agressivo</button>
                         </div>
                     </div>
-                    <!-- Sliders -->
-                    <div class="space-y-5">
+                    <!-- Section: Nature-based -->
+                    <p
+                        class="text-[10px] font-bold text-green-700 dark:text-green-500 uppercase tracking-widest mb-3 mt-2 border-b border-green-200 dark:border-green-800 pb-1">
+                        🌿 Soluções baseadas na natureza</p>
+                    <div class="space-y-4 mb-5">
                         <div>
-                            <div class="flex justify-between mb-1">
-                                <label class="text-xs font-bold text-green-700 dark:text-green-400 uppercase">🌳 Aumento
-                                    Cobertura Arbórea</label>
+                            <div class="flex justify-between mb-0.5">
+                                <label class="text-xs font-bold text-green-700 dark:text-green-400">🌳 Cobertura
+                                    Arbórea</label>
                                 <span class="text-sm font-black text-green-600">{{ simInput.aumentoCoberturaArborea
                                     }}%</span>
                             </div>
@@ -194,8 +201,18 @@
                                 (ngModelChange)="runSimulation()" class="w-full accent-green-600">
                         </div>
                         <div>
-                            <div class="flex justify-between mb-1">
-                                <label class="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase">🏗️ Redução
+                            <div class="flex justify-between mb-0.5">
+                                <label class="text-xs font-bold text-emerald-700 dark:text-emerald-400">🌿 Área
+                                    Verde</label>
+                                <span class="text-sm font-black text-emerald-600">{{ simInput.aumentoAreaVerde
+                                    }}%</span>
+                            </div>
+                            <input type="range" min="0" max="30" step="1" [(ngModel)]="simInput.aumentoAreaVerde"
+                                (ngModelChange)="runSimulation()" class="w-full accent-emerald-600">
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-0.5">
+                                <label class="text-xs font-bold text-blue-700 dark:text-blue-400">🏗️ Redução
                                     Impermeabilização</label>
                                 <span class="text-sm font-black text-blue-600">{{ simInput.reducaoImpermeabilizacao
                                     }}%</span>
@@ -204,15 +221,40 @@
                                 [(ngModel)]="simInput.reducaoImpermeabilizacao" (ngModelChange)="runSimulation()"
                                 class="w-full accent-blue-600">
                         </div>
+                    </div>
+                    <!-- Section: Infrastructure -->
+                    <p
+                        class="text-[10px] font-bold text-purple-700 dark:text-purple-500 uppercase tracking-widest mb-3 border-b border-purple-200 dark:border-purple-800 pb-1">
+                        🏠 Soluções de infraestrutura (WRI)</p>
+                    <div class="space-y-4">
                         <div>
-                            <div class="flex justify-between mb-1">
-                                <label class="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase">🌿
-                                    Aumento Área Verde</label>
-                                <span class="text-sm font-black text-emerald-600">{{ simInput.aumentoAreaVerde
-                                    }}%</span>
+                            <div class="flex justify-between mb-0.5">
+                                <label class="text-xs font-bold text-green-800 dark:text-green-400">🌿 Telhados
+                                    Verdes</label>
+                                <span class="text-sm font-black text-green-700">{{ simInput.telhadosVerdes }}%</span>
                             </div>
-                            <input type="range" min="0" max="30" step="1" [(ngModel)]="simInput.aumentoAreaVerde"
-                                (ngModelChange)="runSimulation()" class="w-full accent-emerald-600">
+                            <input type="range" min="0" max="50" step="1" [(ngModel)]="simInput.telhadosVerdes"
+                                (ngModelChange)="runSimulation()" class="w-full accent-green-700">
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-0.5">
+                                <label class="text-xs font-bold text-violet-700 dark:text-violet-400">🏠 Telhados Frios
+                                    (reflexivos)</label>
+                                <span class="text-sm font-black text-violet-600">{{ simInput.telhadosFrios }}%</span>
+                            </div>
+                            <input type="range" min="0" max="80" step="1" [(ngModel)]="simInput.telhadosFrios"
+                                (ngModelChange)="runSimulation()" class="w-full accent-violet-600">
+                            <p class="text-[9px] text-gray-400 mt-0.5">Phoenix: -7°C LST | Malásia: -13% energia</p>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-0.5">
+                                <label class="text-xs font-bold text-purple-700 dark:text-purple-400">🛣️ Pavimentos
+                                    Frios</label>
+                                <span class="text-sm font-black text-purple-600">{{ simInput.pavimentosFrios }}%</span>
+                            </div>
+                            <input type="range" min="0" max="60" step="1" [(ngModel)]="simInput.pavimentosFrios"
+                                (ngModelChange)="runSimulation()" class="w-full accent-purple-600">
+                            <p class="text-[9px] text-gray-400 mt-0.5">Albedo asfalto 0.05 → reflexivo 0.35</p>
                         </div>
                     </div>
                 </div>
@@ -224,7 +266,7 @@
                         class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-red-950 dark:to-orange-950 rounded-xl border border-red-200 dark:border-red-800 p-5">
                         <h4 class="text-sm font-bold text-red-800 dark:text-red-400 uppercase tracking-wider mb-4">🌡️
                             Simulação Térmica</h4>
-                        <div class="grid grid-cols-3 gap-4">
+                        <div class="grid grid-cols-3 gap-4 mb-4">
                             <div class="text-center">
                                 <p class="text-3xl font-black text-red-600 dark:text-red-400">{{ simResult.deltaLST }}°
                                 </p>
@@ -242,37 +284,70 @@
                                 <p class="text-[10px] text-green-600 font-bold uppercase mt-1">Conforto</p>
                             </div>
                         </div>
+                        <!-- Contribution breakdown -->
+                        <div *ngIf="simResult.contribuicoes.length > 0"
+                            class="border-t border-red-200 dark:border-red-800 pt-3 mt-2">
+                            <p class="text-[10px] font-bold text-red-700 dark:text-red-400 uppercase mb-2">Contribuição
+                                por solução</p>
+                            @for (c of simResult.contribuicoes; track c.nome) {
+                            <div class="flex items-center gap-2 mb-1.5">
+                                <span class="text-[10px] text-gray-600 dark:text-gray-300 w-32 truncate">{{ c.nome
+                                    }}</span>
+                                <div class="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                                    <div class="h-2 rounded-full" [style.width.%]="(c.delta / simResult.deltaLST) * 100"
+                                        [style.background-color]="c.cor"></div>
+                                </div>
+                                <span class="text-[10px] font-bold w-12 text-right" [style.color]="c.cor">{{ c.delta
+                                    }}°</span>
+                            </div>
+                            }
+                        </div>
                     </div>
-                    <!-- Hydrological -->
-                    <div
-                        class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950 rounded-xl border border-blue-200 dark:border-blue-800 p-5">
-                        <h4 class="text-sm font-bold text-blue-800 dark:text-blue-400 uppercase tracking-wider mb-4">💧
-                            Simulação Hídrica (SCS-CN)</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="text-center">
+                    <!-- Hydrological + Energy -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div
+                            class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950 rounded-xl border border-blue-200 dark:border-blue-800 p-5">
+                            <h4
+                                class="text-sm font-bold text-blue-800 dark:text-blue-400 uppercase tracking-wider mb-3">
+                                💧 Hídrica</h4>
+                            <div class="text-center mb-2">
                                 <p class="text-3xl font-black text-blue-600 dark:text-blue-400">-{{
                                     simResult.reducaoEscoamento }}%</p>
-                                <p class="text-[10px] text-blue-500 font-bold uppercase mt-1">Escoamento</p>
+                                <p class="text-[10px] text-blue-500 font-bold uppercase">Escoamento</p>
                             </div>
-                            <div class="text-center">
-                                <p class="text-3xl font-black text-cyan-600 dark:text-cyan-400">+{{
+                            <div class="text-center mb-2">
+                                <p class="text-2xl font-black text-cyan-600 dark:text-cyan-400">+{{
                                     simResult.aumentoInfiltracao }}%</p>
-                                <p class="text-[10px] text-cyan-600 font-bold uppercase mt-1">Infiltração</p>
+                                <p class="text-[10px] text-cyan-600 font-bold uppercase">Infiltração</p>
+                            </div>
+                            <div class="flex justify-center gap-4 text-[10px] text-gray-500 dark:text-gray-400">
+                                <span>CN: <b class="text-gray-800 dark:text-gray-200">{{ simResult.cnOriginal
+                                        }}</b></span>
+                                <span>→</span>
+                                <span>CN: <b class="text-green-600">{{ simResult.cnSimulado }}</b></span>
                             </div>
                         </div>
-                        <div class="flex justify-center gap-8 mt-4 text-xs text-gray-500 dark:text-gray-400">
-                            <span>CN Original: <b class="text-gray-800 dark:text-gray-200">{{ simResult.cnOriginal
-                                    }}</b></span>
-                            <span>→</span>
-                            <span>CN Simulado: <b class="text-green-600">{{ simResult.cnSimulado }}</b></span>
+                        <div
+                            class="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950 dark:to-yellow-950 rounded-xl border border-amber-200 dark:border-amber-800 p-5">
+                            <h4
+                                class="text-sm font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider mb-3">
+                                ⚡ Energia</h4>
+                            <div class="text-center mb-2">
+                                <p class="text-3xl font-black text-amber-600 dark:text-amber-400">-{{
+                                    simResult.reducaoEnergia }}%</p>
+                                <p class="text-[10px] text-amber-600 font-bold uppercase">Consumo AC</p>
+                            </div>
+                            <p class="text-[9px] text-gray-400 text-center">Telhados frios reduzem demanda de
+                                ar-condicionado (WRI/Malásia)</p>
                         </div>
                     </div>
                     <!-- Context -->
                     <div
                         class="bg-gray-100 dark:bg-gray-800 rounded-xl p-4 text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
                         <b class="text-gray-800 dark:text-gray-200">Cenário {{ cenario }}:</b> Coeficientes baseados em
-                        WRI Brasil, EPA Urban Heat Island Compendium, Oke (2017). SCS-CN simplificado conforme USDA
-                        TR-55.
+                        <a href="https://www.wribrasil.org.br/noticias/impactos-calor-urbano-cidades-solucoes-passivas-natureza-adaptacao"
+                            target="_blank" class="text-green-600 underline">WRI Brasil (2025)</a>,
+                        EPA Urban Heat Island Compendium, Oke (2017), Ziter (2019). SCS-CN conforme USDA TR-55.
                     </div>
                 </div>
             </div>
