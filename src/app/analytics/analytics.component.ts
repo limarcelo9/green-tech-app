@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { MockDataService, CityInfo, TimelinePoint } from '../services/mock-data.service';
+import { IpaService, SetorIPA } from '../services/ipa.service';
 
 @Component({
   selector: 'app-analytics',
@@ -13,6 +14,7 @@ import { MockDataService, CityInfo, TimelinePoint } from '../services/mock-data.
 export class AnalyticsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   dataService = inject(MockDataService);
+  ipaService = inject(IpaService);
 
   selectedState = 'DF';
   currentCities: CityInfo[] = [];
@@ -35,12 +37,32 @@ export class AnalyticsComponent implements OnInit {
 
   // Timeline
   timeline: TimelinePoint[] = [];
-  timelineMax = 45; // for bar scaling
+  timelineMax = 45;
+
+  // IPA
+  setoresIPA: SetorIPA[] = [];
+  ipaLoading = true;
+  ipaStats = { muitoAlta: 0, alta: 0, media: 0, baixa: 0, avgScore: 0, maxScore: 0 };
+  activeTab: 'indicators' | 'ipa' = 'ipa';
 
   ngOnInit() {
     this.currentCities = this.dataService.citiesByState['DF'] || [];
 
-    // Check for custom coordinates (from map click)
+    // Load IPA data
+    this.ipaService.getSetoresIPA().subscribe(data => {
+      this.setoresIPA = data;
+      this.ipaLoading = false;
+      this.ipaStats = {
+        muitoAlta: data.filter(s => s.ipa_categoria === 'Muito Alta').length,
+        alta: data.filter(s => s.ipa_categoria === 'Alta').length,
+        media: data.filter(s => s.ipa_categoria === 'Média').length,
+        baixa: data.filter(s => s.ipa_categoria === 'Baixa').length,
+        avgScore: +(data.reduce((sum, s) => sum + s.ipa_score, 0) / data.length).toFixed(1),
+        maxScore: Math.max(...data.map(s => s.ipa_score)),
+      };
+    });
+
+    // Check for custom coordinates
     this.route.queryParams.subscribe(qp => {
       const lat = parseFloat(qp['lat']);
       const lng = parseFloat(qp['lng']);
@@ -57,8 +79,8 @@ export class AnalyticsComponent implements OnInit {
         this.locationInfo = {
           name: this.selectedCityName,
           info: name
-            ? `Cidade: ${name} (${state || ''}). Dados obtidos em tempo real.`
-            : 'Localização selecionada manualmente no mapa. Dados obtidos em tempo real.'
+            ? `Cidade: ${name} (${state || ''}). Dados em tempo real.`
+            : 'Localização selecionada no mapa. Dados em tempo real.'
         };
         this.isLoading = true;
         this.fetchByCoords(lat, lng);
@@ -66,7 +88,7 @@ export class AnalyticsComponent implements OnInit {
       }
     });
 
-    // Default: DF Plano Piloto
+    // Default
     this.route.paramMap.subscribe(() => {
       if (!this.isCustomLocation) {
         this.selectCity(this.currentCities[0] || { name: 'Plano Piloto', lat: -15.7938, lng: -47.8827 });
@@ -88,45 +110,35 @@ export class AnalyticsComponent implements OnInit {
     this.isCustomLocation = false;
     this.locationInfo = {
       name: city.name,
-      info: `Cidade de ${city.name}, ${this.dataService.states[this.selectedState]?.name || ''}. Dados climáticos em tempo real via sensores e satélites.`
+      info: `${city.name}, ${this.dataService.states[this.selectedState]?.name || ''}. Dados climáticos em tempo real.`
     };
     this.isLoading = true;
     this.fetchByCoords(city.lat, city.lng);
   }
 
   private fetchByCoords(lat: number, lng: number) {
-    this.indicators = {
-      temperature: '...', floodRisk: '...', elevation: '...', population: 'N/A', soilSealing: 'N/A'
-    };
+    this.indicators = { temperature: '...', floodRisk: '...', elevation: '...', population: 'N/A', soilSealing: 'N/A' };
     this.timeline = [];
 
-    this.dataService.getTemperatureByCoords(lat, lng).subscribe(data => {
-      this.indicators.temperature = data;
-    });
-    this.dataService.getFloodRiskByCoords(lat, lng).subscribe(data => {
-      this.indicators.floodRisk = data;
-    });
-    this.dataService.getElevationByCoords(lat, lng).subscribe(data => {
-      this.indicators.elevation = data;
-      this.isLoading = false;
-    });
-
-    // Timeline
+    this.dataService.getTemperatureByCoords(lat, lng).subscribe(data => { this.indicators.temperature = data; });
+    this.dataService.getFloodRiskByCoords(lat, lng).subscribe(data => { this.indicators.floodRisk = data; });
+    this.dataService.getElevationByCoords(lat, lng).subscribe(data => { this.indicators.elevation = data; this.isLoading = false; });
     this.dataService.getTemperatureTimeline(lat, lng).subscribe(data => {
       this.timeline = data;
-      if (data.length > 0) {
-        this.timelineMax = Math.max(...data.map(d => d.tempMax), 40);
-      }
+      if (data.length > 0) this.timelineMax = Math.max(...data.map(d => d.tempMax), 40);
     });
   }
 
   getBarHeightPx(temp: number): number {
-    // Max bar height = 120px, scale proportionally
     return Math.max(8, (temp / this.timelineMax) * 120);
   }
 
   formatDate(dateStr: string): string {
     const d = new Date(dateStr + 'T12:00:00');
     return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  }
+
+  getScoreBarWidth(score: number): number {
+    return Math.min(100, Math.max(2, score));
   }
 }

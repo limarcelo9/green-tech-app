@@ -7,7 +7,7 @@
             <div>
                 <h1
                     class="text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight font-outfit mb-2">
-                    {{ locationInfo.name }}
+                    Analytics
                 </h1>
                 <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl leading-relaxed">{{ locationInfo.info }}
                 </p>
@@ -25,158 +25,281 @@
             </div>
         </div>
 
-        <!-- City Navigation -->
-        <div class="flex items-center gap-3 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-            <span
-                class="text-sm font-semibold text-gray-400 uppercase tracking-widest whitespace-nowrap mr-2">Cidade:</span>
-            <div class="flex gap-2">
-                @for (city of currentCities; track city.name) {
-                <button (click)="selectCity(city)" [class.bg-green-700]="selectedCityName === city.name"
-                    [class.text-white]="selectedCityName === city.name"
-                    [class.shadow-md]="selectedCityName === city.name"
-                    [class.border-green-700]="selectedCityName === city.name"
-                    [class.bg-white]="selectedCityName !== city.name"
-                    [class.dark:bg-gray-800]="selectedCityName !== city.name"
-                    [class.text-gray-600]="selectedCityName !== city.name"
-                    [class.dark:text-gray-300]="selectedCityName !== city.name"
-                    [class.border-gray-200]="selectedCityName !== city.name"
-                    [class.dark:border-gray-700]="selectedCityName !== city.name"
-                    class="px-4 py-2 rounded-xl border text-sm font-semibold transition-all duration-300 whitespace-nowrap">
-                    {{ city.name }}
-                </button>
-                }
+        <!-- Tab Navigation -->
+        <div class="flex gap-1 mb-6 bg-gray-200 dark:bg-gray-800 p-1 rounded-xl w-fit">
+            <button (click)="activeTab = 'ipa'"
+                [class]="activeTab === 'ipa' ? 'px-6 py-2.5 bg-white dark:bg-gray-700 text-green-700 dark:text-green-400 font-bold rounded-lg shadow-sm text-sm' : 'px-6 py-2.5 text-gray-500 dark:text-gray-400 font-medium text-sm hover:text-gray-700 rounded-lg'">
+                🏗️ IPA-IVU (Ranking)
+            </button>
+            <button (click)="activeTab = 'indicators'"
+                [class]="activeTab === 'indicators' ? 'px-6 py-2.5 bg-white dark:bg-gray-700 text-green-700 dark:text-green-400 font-bold rounded-lg shadow-sm text-sm' : 'px-6 py-2.5 text-gray-500 dark:text-gray-400 font-medium text-sm hover:text-gray-700 rounded-lg'">
+                🌡️ Indicadores por Cidade
+            </button>
+        </div>
+
+        <!-- ===== IPA TAB ===== -->
+        <div *ngIf="activeTab === 'ipa'">
+
+            <!-- IPA Loading -->
+            <div *ngIf="ipaLoading" class="flex flex-col items-center justify-center py-20">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
+                <p class="text-gray-500 dark:text-gray-400 font-medium animate-pulse">Calculando IPA-IVU...</p>
             </div>
-        </div>
 
-        <!-- Loading -->
-        <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-20">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
-            <p class="text-gray-500 dark:text-gray-400 font-medium animate-pulse">Consultando Open-Meteo e
-                Open-Elevation...</p>
-        </div>
-
-        <!-- Indicator Cards -->
-        <div *ngIf="!isLoading" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <!-- Temperature -->
-            <div
-                class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-red-950 dark:to-orange-950 rounded-xl shadow-sm border border-red-100 dark:border-red-800 p-6 relative overflow-hidden group hover:shadow-md transition-all">
-                <div
-                    class="absolute -right-4 -top-4 text-red-200/50 dark:text-red-800/50 group-hover:scale-110 transition-transform">
-                    <svg class="w-28 h-28" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
-                    </svg>
-                </div>
-                <div class="relative z-10">
-                    <div class="flex items-start justify-between mb-2">
-                        <h3 class="text-sm font-bold text-red-800 dark:text-red-400 uppercase tracking-widest">
-                            Temperatura</h3>
-                        <span
-                            class="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300 text-[10px] font-semibold px-2 py-0.5 rounded border border-red-200 dark:border-red-700">Open-Meteo</span>
+            <!-- IPA Content -->
+            <div *ngIf="!ipaLoading">
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div
+                        class="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl p-4 text-center">
+                        <p class="text-3xl font-black text-red-600 dark:text-red-400">{{ ipaStats.muitoAlta }}</p>
+                        <p class="text-xs font-bold text-red-700 dark:text-red-500 uppercase tracking-wider mt-1">🔴
+                            Muito Alta</p>
                     </div>
-                    <p class="text-4xl font-black text-red-600 dark:text-red-400 tracking-tighter">{{
-                        indicators.temperature }}</p>
-                </div>
-            </div>
-
-            <!-- Flood Risk -->
-            <div
-                class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950 rounded-xl shadow-sm border border-blue-100 dark:border-blue-800 p-6 relative overflow-hidden group hover:shadow-md transition-all">
-                <div
-                    class="absolute -right-4 -bottom-4 text-blue-200/50 dark:text-blue-800/50 group-hover:scale-110 transition-transform">
-                    <svg class="w-28 h-28" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 3c-1.3 2.5-4 5.7-4 8 0 2.2 1.8 4 4 4s4-1.8 4-4c0-2.3-2.7-5.5-4-8z" />
-                    </svg>
-                </div>
-                <div class="relative z-10">
-                    <div class="flex items-start justify-between mb-2">
-                        <h3 class="text-sm font-bold text-blue-800 dark:text-blue-400 uppercase tracking-widest">
-                            Alagamento</h3>
-                        <span
-                            class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 text-[10px] font-semibold px-2 py-0.5 rounded border border-blue-200 dark:border-blue-700">Open-Meteo</span>
+                    <div
+                        class="bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-xl p-4 text-center">
+                        <p class="text-3xl font-black text-orange-600 dark:text-orange-400">{{ ipaStats.alta }}</p>
+                        <p class="text-xs font-bold text-orange-700 dark:text-orange-500 uppercase tracking-wider mt-1">
+                            🟠 Alta</p>
                     </div>
-                    <p class="text-3xl font-black text-blue-600 dark:text-blue-400 tracking-tight">{{
-                        indicators.floodRisk }}</p>
-                </div>
-            </div>
-
-            <!-- Elevation -->
-            <div
-                class="bg-gradient-to-br from-stone-50 to-stone-100 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-sm border border-stone-200 dark:border-gray-700 p-6 relative overflow-hidden group hover:shadow-md transition-all">
-                <div
-                    class="absolute -right-2 -bottom-6 text-stone-200/80 dark:text-gray-700/80 group-hover:scale-110 transition-transform">
-                    <svg class="w-28 h-28" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M14 6l-3.8 5 1.5 2 2.3-3 4.5 6H.5L10 3.5 14 6z" />
-                    </svg>
-                </div>
-                <div class="relative z-10">
-                    <div class="flex items-start justify-between mb-2">
-                        <h3 class="text-sm font-bold text-stone-800 dark:text-stone-300 uppercase tracking-widest">
-                            Altitude</h3>
-                        <span
-                            class="bg-stone-200 dark:bg-gray-700 text-stone-800 dark:text-stone-300 text-[10px] font-semibold px-2 py-0.5 rounded border border-stone-300 dark:border-gray-600">Open-Elevation</span>
+                    <div
+                        class="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-center">
+                        <p class="text-3xl font-black text-yellow-600 dark:text-yellow-400">{{ ipaStats.media }}</p>
+                        <p class="text-xs font-bold text-yellow-700 dark:text-yellow-500 uppercase tracking-wider mt-1">
+                            🟡 Média</p>
                     </div>
-                    <p class="text-4xl font-black text-stone-600 dark:text-stone-300 tracking-tighter">{{
-                        indicators.elevation }}</p>
+                    <div
+                        class="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-xl p-4 text-center">
+                        <p class="text-3xl font-black text-green-600 dark:text-green-400">{{ ipaStats.baixa }}</p>
+                        <p class="text-xs font-bold text-green-700 dark:text-green-500 uppercase tracking-wider mt-1">🟢
+                            Baixa</p>
+                    </div>
+                </div>
+
+                <!-- Formula Banner -->
+                <div class="bg-gray-900 dark:bg-gray-800 rounded-xl p-5 mb-6 text-white shadow-lg">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-lg font-bold">IPA = 0.4×H + 0.3×W + 0.3×P</h3>
+                            <p class="text-gray-400 text-xs mt-1">Normalização por percentil urbano | {{
+                                setoresIPA.length }} setores censitários</p>
+                        </div>
+                        <div class="flex gap-6 text-sm">
+                            <div class="text-center">
+                                <p class="text-2xl font-black text-orange-400">{{ ipaStats.avgScore }}</p>
+                                <p class="text-[10px] uppercase text-gray-400 tracking-wider">Média DF</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-black text-red-400">{{ ipaStats.maxScore }}</p>
+                                <p class="text-[10px] uppercase text-gray-400 tracking-wider">Máximo</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-6 mt-4 text-xs">
+                        <span class="text-red-300">🌡️ H (Calor) = 0.5×LST + 0.3×Imperm + 0.2×NDVI⁻¹</span>
+                        <span class="text-blue-300">💧 W (Água) = 0.4×TWI + 0.3×Imperm + 0.3×Decliv</span>
+                        <span class="text-purple-300">👥 P (Pessoas) = 0.4×Dens + 0.4×Renda⁻¹ + 0.2×Idosos</span>
+                    </div>
+                </div>
+
+                <!-- Ranking Table -->
+                <div
+                    class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+                    <div class="p-4 border-b border-gray-200 dark:border-gray-800">
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">📊 Ranking IPA-IVU por Setor
+                            Censitário</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50 dark:bg-gray-800">
+                                <tr>
+                                    <th
+                                        class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        #</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        RA</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        Setor</th>
+                                    <th
+                                        class="px-4 py-3 text-center text-[10px] font-bold text-red-500 uppercase tracking-wider">
+                                        H</th>
+                                    <th
+                                        class="px-4 py-3 text-center text-[10px] font-bold text-blue-500 uppercase tracking-wider">
+                                        W</th>
+                                    <th
+                                        class="px-4 py-3 text-center text-[10px] font-bold text-purple-500 uppercase tracking-wider">
+                                        P</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        IPA</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        Categoria</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (setor of setoresIPA; track setor.id_setor; let i = $index) {
+                                <tr
+                                    class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                    <td class="px-4 py-3 text-gray-500 dark:text-gray-500 font-mono text-xs">{{ i + 1 }}
+                                    </td>
+                                    <td class="px-4 py-3 font-semibold text-gray-800 dark:text-gray-200">{{
+                                        setor.ra_nome }}</td>
+                                    <td class="px-4 py-3 text-gray-500 dark:text-gray-400 font-mono text-xs">{{
+                                        setor.id_setor }}</td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span
+                                            class="inline-block px-2 py-0.5 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded font-bold text-xs">{{
+                                            setor.modulo_h }}</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span
+                                            class="inline-block px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded font-bold text-xs">{{
+                                            setor.modulo_w }}</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span
+                                            class="inline-block px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded font-bold text-xs">{{
+                                            setor.modulo_p }}</span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-black text-gray-900 dark:text-gray-100 w-10">{{
+                                                setor.ipa_score }}</span>
+                                            <div
+                                                class="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 max-w-[120px]">
+                                                <div class="h-2 rounded-full transition-all duration-500"
+                                                    [style.width.%]="getScoreBarWidth(setor.ipa_score)"
+                                                    [style.background-color]="setor.ipa_cor"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span
+                                            class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                                            [style.background-color]="setor.ipa_cor + '20'"
+                                            [style.color]="setor.ipa_cor">
+                                            {{ setor.ipa_categoria }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Temperature Timeline -->
-        <div *ngIf="!isLoading && timeline.length > 0"
-            class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 mb-8 transition-colors duration-300">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">📊 Timeline de Temperatura (7 dias)
-                    </h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Dados históricos via Open-Meteo Forecast
-                        API</p>
-                </div>
-                <div class="flex items-center gap-4 text-xs">
-                    <span class="flex items-center gap-1 text-gray-700 dark:text-gray-300"><span
-                            class="w-3 h-3 bg-red-400 rounded-sm inline-block"></span> Máxima</span>
-                    <span class="flex items-center gap-1 text-gray-700 dark:text-gray-300"><span
-                            class="w-3 h-3 bg-blue-400 rounded-sm inline-block"></span> Mínima</span>
+        <!-- ===== INDICATORS TAB ===== -->
+        <div *ngIf="activeTab === 'indicators'">
+
+            <!-- City Navigation -->
+            <div class="flex items-center gap-3 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+                <span
+                    class="text-sm font-semibold text-gray-400 uppercase tracking-widest whitespace-nowrap mr-2">Cidade:</span>
+                <div class="flex gap-2">
+                    @for (city of currentCities; track city.name) {
+                    <button (click)="selectCity(city)" [class.bg-green-700]="selectedCityName === city.name"
+                        [class.text-white]="selectedCityName === city.name"
+                        [class.shadow-md]="selectedCityName === city.name"
+                        [class.border-green-700]="selectedCityName === city.name"
+                        [class.bg-white]="selectedCityName !== city.name"
+                        [class.dark:bg-gray-800]="selectedCityName !== city.name"
+                        [class.text-gray-600]="selectedCityName !== city.name"
+                        [class.dark:text-gray-300]="selectedCityName !== city.name"
+                        [class.border-gray-200]="selectedCityName !== city.name"
+                        [class.dark:border-gray-700]="selectedCityName !== city.name"
+                        class="px-4 py-2 rounded-xl border text-sm font-semibold transition-all duration-300 whitespace-nowrap">
+                        {{ city.name }}
+                    </button>
+                    }
                 </div>
             </div>
 
-            <div class="flex items-end gap-3" style="height: 220px;">
-                @for (point of timeline; track point.date) {
-                <div class="flex-1 flex flex-col items-center h-full justify-end">
-                    <span class="text-[11px] font-bold text-red-600 dark:text-red-400 mb-1">{{ point.tempMax }}°</span>
-                    <div class="w-4/5 max-w-[40px] bg-gradient-to-t from-red-500 to-orange-300 rounded-t-md shadow-sm"
-                        [style.height.px]="getBarHeightPx(point.tempMax)"></div>
-                    <div class="h-1"></div>
-                    <div class="w-4/5 max-w-[40px] bg-gradient-to-t from-blue-500 to-cyan-300 rounded-t-md shadow-sm"
-                        [style.height.px]="getBarHeightPx(point.tempMin)"></div>
-                    <span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 mt-1">{{ point.tempMin
-                        }}°</span>
-                    <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 font-medium">{{
-                        formatDate(point.date) }}</span>
-                </div>
-                }
+            <!-- Loading -->
+            <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-20">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
+                <p class="text-gray-500 dark:text-gray-400 font-medium animate-pulse">Consultando APIs...</p>
             </div>
-        </div>
 
-        <!-- Context Panel -->
-        <div *ngIf="!isLoading"
-            class="bg-green-50 dark:bg-green-950 border border-green-100 dark:border-green-800 rounded-xl p-6 shadow-sm transition-colors duration-300">
-            <div class="flex items-start space-x-4">
-                <div class="bg-green-600 p-3 rounded-full text-white mt-1 shadow-sm shrink-0">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+            <!-- Indicator Cards -->
+            <div *ngIf="!isLoading" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div
+                    class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-red-950 dark:to-orange-950 rounded-xl shadow-sm border border-red-100 dark:border-red-800 p-6 relative overflow-hidden group hover:shadow-md transition-all">
+                    <div class="relative z-10">
+                        <div class="flex items-start justify-between mb-2">
+                            <h3 class="text-sm font-bold text-red-800 dark:text-red-400 uppercase tracking-widest">
+                                Temperatura</h3>
+                            <span
+                                class="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300 text-[10px] font-semibold px-2 py-0.5 rounded border border-red-200 dark:border-red-700">Open-Meteo</span>
+                        </div>
+                        <p class="text-4xl font-black text-red-600 dark:text-red-400 tracking-tighter">{{
+                            indicators.temperature }}</p>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="text-xl font-bold text-green-900 dark:text-green-300 mb-2">Por que esses dados importam?
-                    </h3>
-                    <p class="text-green-800 dark:text-green-400 leading-relaxed">
-                        Segundo o <b>WRI Brasil</b>, as Ilhas de Calor Urbanas causam diferenças de até 8°C entre
-                        centros urbanos e áreas rurais adjacentes. A <b>impermeabilização do solo</b> e a falta de
-                        <b>infraestrutura verde</b> (telhados verdes, parques lineares, biovaletas) agravam esse
-                        problema. A timeline acima permite acompanhar como a <b>temperatura</b> oscila ao longo dos dias
-                        e justifica investimentos em <b>Soluções Baseadas na Natureza</b>.
-                    </p>
+                <div
+                    class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950 rounded-xl shadow-sm border border-blue-100 dark:border-blue-800 p-6 relative overflow-hidden group hover:shadow-md transition-all">
+                    <div class="relative z-10">
+                        <div class="flex items-start justify-between mb-2">
+                            <h3 class="text-sm font-bold text-blue-800 dark:text-blue-400 uppercase tracking-widest">
+                                Alagamento</h3>
+                            <span
+                                class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 text-[10px] font-semibold px-2 py-0.5 rounded border border-blue-200 dark:border-blue-700">Open-Meteo</span>
+                        </div>
+                        <p class="text-3xl font-black text-blue-600 dark:text-blue-400 tracking-tight">{{
+                            indicators.floodRisk }}</p>
+                    </div>
+                </div>
+                <div
+                    class="bg-gradient-to-br from-stone-50 to-stone-100 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-sm border border-stone-200 dark:border-gray-700 p-6 relative overflow-hidden group hover:shadow-md transition-all">
+                    <div class="relative z-10">
+                        <div class="flex items-start justify-between mb-2">
+                            <h3 class="text-sm font-bold text-stone-800 dark:text-stone-300 uppercase tracking-widest">
+                                Altitude</h3>
+                            <span
+                                class="bg-stone-200 dark:bg-gray-700 text-stone-800 dark:text-stone-300 text-[10px] font-semibold px-2 py-0.5 rounded border border-stone-300 dark:border-gray-600">Open-Elevation</span>
+                        </div>
+                        <p class="text-4xl font-black text-stone-600 dark:text-stone-300 tracking-tighter">{{
+                            indicators.elevation }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div *ngIf="!isLoading && timeline.length > 0"
+                class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">📊 Timeline de Temperatura (7
+                            dias)</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Open-Meteo Forecast API</p>
+                    </div>
+                    <div class="flex items-center gap-4 text-xs">
+                        <span class="flex items-center gap-1 text-gray-700 dark:text-gray-300"><span
+                                class="w-3 h-3 bg-red-400 rounded-sm inline-block"></span> Máxima</span>
+                        <span class="flex items-center gap-1 text-gray-700 dark:text-gray-300"><span
+                                class="w-3 h-3 bg-blue-400 rounded-sm inline-block"></span> Mínima</span>
+                    </div>
+                </div>
+                <div class="flex items-end gap-3" style="height: 220px;">
+                    @for (point of timeline; track point.date) {
+                    <div class="flex-1 flex flex-col items-center h-full justify-end">
+                        <span class="text-[11px] font-bold text-red-600 dark:text-red-400 mb-1">{{ point.tempMax
+                            }}°</span>
+                        <div class="w-4/5 max-w-[40px] bg-gradient-to-t from-red-500 to-orange-300 rounded-t-md shadow-sm"
+                            [style.height.px]="getBarHeightPx(point.tempMax)"></div>
+                        <div class="h-1"></div>
+                        <div class="w-4/5 max-w-[40px] bg-gradient-to-t from-blue-500 to-cyan-300 rounded-t-md shadow-sm"
+                            [style.height.px]="getBarHeightPx(point.tempMin)"></div>
+                        <span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 mt-1">{{ point.tempMin
+                            }}°</span>
+                        <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 font-medium">{{
+                            formatDate(point.date) }}</span>
+                    </div>
+                    }
                 </div>
             </div>
         </div>
