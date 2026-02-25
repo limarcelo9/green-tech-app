@@ -126,7 +126,7 @@ export class SimulationService {
 
         return scenarios.map(s => {
             const recalculated = setores.map(setor => ({
-                id: setor.id_setor,
+                id: setor.id_ra,
                 ra: setor.ra_nome,
                 score: +((s.h * setor.modulo_h) + (s.w * setor.modulo_w) + (s.p * setor.modulo_p)).toFixed(1),
             })).sort((a, b) => b.score - a.score);
