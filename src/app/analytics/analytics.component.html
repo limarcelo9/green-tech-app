@@ -2,13 +2,12 @@
     class="h-[calc(100vh-64px)] overflow-y-auto bg-gray-50/50 dark:bg-gray-950 relative p-4 lg:p-10 transition-colors duration-300">
     <div class="max-w-7xl mx-auto min-h-full flex flex-col">
 
-        <!-- Header + State Selector -->
+        <!-- Header -->
         <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
             <div>
                 <h1
                     class="text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight font-outfit mb-2">
-                    Analytics
-                </h1>
+                    Analytics</h1>
                 <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl leading-relaxed">{{ locationInfo.info }}
                 </p>
             </div>
@@ -16,7 +15,7 @@
                 <label
                     class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado:</label>
                 <select (change)="setEstado($any($event.target).value)"
-                    class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm focus:ring-2 focus:ring-green-500 cursor-pointer">
+                    class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm cursor-pointer">
                     @for (key of dataService.stateKeys; track key) {
                     <option [value]="key" [selected]="key === selectedState">{{ dataService.states[key].sigla }} - {{
                         dataService.states[key].name }}</option>
@@ -25,30 +24,29 @@
             </div>
         </div>
 
-        <!-- Tab Navigation -->
-        <div class="flex gap-1 mb-6 bg-gray-200 dark:bg-gray-800 p-1 rounded-xl w-fit">
+        <!-- Tabs -->
+        <div class="flex gap-1 mb-6 bg-gray-200 dark:bg-gray-800 p-1 rounded-xl w-fit flex-wrap">
             <button (click)="activeTab = 'ipa'"
-                [class]="activeTab === 'ipa' ? 'px-6 py-2.5 bg-white dark:bg-gray-700 text-green-700 dark:text-green-400 font-bold rounded-lg shadow-sm text-sm' : 'px-6 py-2.5 text-gray-500 dark:text-gray-400 font-medium text-sm hover:text-gray-700 rounded-lg'">
-                🏗️ IPA-IVU (Ranking)
-            </button>
+                [class]="activeTab === 'ipa' ? 'px-5 py-2 bg-white dark:bg-gray-700 text-green-700 dark:text-green-400 font-bold rounded-lg shadow-sm text-sm' : 'px-5 py-2 text-gray-500 dark:text-gray-400 font-medium text-sm rounded-lg'">🏗️
+                IPA Ranking</button>
+            <button (click)="activeTab = 'simulation'"
+                [class]="activeTab === 'simulation' ? 'px-5 py-2 bg-white dark:bg-gray-700 text-green-700 dark:text-green-400 font-bold rounded-lg shadow-sm text-sm' : 'px-5 py-2 text-gray-500 dark:text-gray-400 font-medium text-sm rounded-lg'">⚡
+                Simulação</button>
+            <button (click)="activeTab = 'sensitivity'"
+                [class]="activeTab === 'sensitivity' ? 'px-5 py-2 bg-white dark:bg-gray-700 text-green-700 dark:text-green-400 font-bold rounded-lg shadow-sm text-sm' : 'px-5 py-2 text-gray-500 dark:text-gray-400 font-medium text-sm rounded-lg'">🔬
+                Sensibilidade</button>
             <button (click)="activeTab = 'indicators'"
-                [class]="activeTab === 'indicators' ? 'px-6 py-2.5 bg-white dark:bg-gray-700 text-green-700 dark:text-green-400 font-bold rounded-lg shadow-sm text-sm' : 'px-6 py-2.5 text-gray-500 dark:text-gray-400 font-medium text-sm hover:text-gray-700 rounded-lg'">
-                🌡️ Indicadores por Cidade
-            </button>
+                [class]="activeTab === 'indicators' ? 'px-5 py-2 bg-white dark:bg-gray-700 text-green-700 dark:text-green-400 font-bold rounded-lg shadow-sm text-sm' : 'px-5 py-2 text-gray-500 dark:text-gray-400 font-medium text-sm rounded-lg'">🌡️
+                Indicadores</button>
         </div>
 
         <!-- ===== IPA TAB ===== -->
         <div *ngIf="activeTab === 'ipa'">
-
-            <!-- IPA Loading -->
             <div *ngIf="ipaLoading" class="flex flex-col items-center justify-center py-20">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
                 <p class="text-gray-500 dark:text-gray-400 font-medium animate-pulse">Calculando IPA-IVU...</p>
             </div>
-
-            <!-- IPA Content -->
             <div *ngIf="!ipaLoading">
-                <!-- Summary Cards -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div
                         class="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl p-4 text-center">
@@ -75,115 +73,73 @@
                             Baixa</p>
                     </div>
                 </div>
-
-                <!-- Formula Banner -->
                 <div class="bg-gray-900 dark:bg-gray-800 rounded-xl p-5 mb-6 text-white shadow-lg">
-                    <div class="flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <h3 class="text-lg font-bold">IPA = 0.4×H + 0.3×W + 0.3×P</h3>
-                            <p class="text-gray-400 text-xs mt-1">Normalização por percentil urbano | {{
-                                setoresIPA.length }} setores censitários</p>
-                        </div>
-                        <div class="flex gap-6 text-sm">
-                            <div class="text-center">
-                                <p class="text-2xl font-black text-orange-400">{{ ipaStats.avgScore }}</p>
-                                <p class="text-[10px] uppercase text-gray-400 tracking-wider">Média DF</p>
-                            </div>
-                            <div class="text-center">
-                                <p class="text-2xl font-black text-red-400">{{ ipaStats.maxScore }}</p>
-                                <p class="text-[10px] uppercase text-gray-400 tracking-wider">Máximo</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex gap-6 mt-4 text-xs">
-                        <span class="text-red-300">🌡️ H (Calor) = 0.5×LST + 0.3×Imperm + 0.2×NDVI⁻¹</span>
-                        <span class="text-blue-300">💧 W (Água) = 0.4×TWI + 0.3×Imperm + 0.3×Decliv</span>
-                        <span class="text-purple-300">👥 P (Pessoas) = 0.4×Dens + 0.4×Renda⁻¹ + 0.2×Idosos</span>
+                    <h3 class="text-lg font-bold">IPA = 0.4×H + 0.3×W + 0.3×P</h3>
+                    <p class="text-gray-400 text-xs mt-1">Normalização percentil | {{ setoresIPA.length }} setores</p>
+                    <div class="flex gap-6 mt-3 text-xs flex-wrap">
+                        <span class="text-red-300">🌡️ H = 0.5×LST + 0.3×Imperm + 0.2×NDVI⁻¹</span>
+                        <span class="text-blue-300">💧 W = 0.4×TWI + 0.3×Imperm + 0.3×Decliv</span>
+                        <span class="text-purple-300">👥 P = 0.4×Dens + 0.4×Renda⁻¹ + 0.2×Idosos</span>
                     </div>
                 </div>
-
-                <!-- Ranking Table -->
                 <div
                     class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
-                    <div class="p-4 border-b border-gray-200 dark:border-gray-800">
-                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">📊 Ranking IPA-IVU por Setor
-                            Censitário</h3>
-                    </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead class="bg-gray-50 dark:bg-gray-800">
                                 <tr>
                                     <th
-                                        class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
                                         #</th>
                                     <th
-                                        class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
                                         RA</th>
+                                    <th class="px-4 py-3 text-center text-[10px] font-bold text-red-500 uppercase">H
+                                    </th>
+                                    <th class="px-4 py-3 text-center text-[10px] font-bold text-blue-500 uppercase">W
+                                    </th>
+                                    <th class="px-4 py-3 text-center text-[10px] font-bold text-purple-500 uppercase">P
+                                    </th>
                                     <th
-                                        class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Setor</th>
-                                    <th
-                                        class="px-4 py-3 text-center text-[10px] font-bold text-red-500 uppercase tracking-wider">
-                                        H</th>
-                                    <th
-                                        class="px-4 py-3 text-center text-[10px] font-bold text-blue-500 uppercase tracking-wider">
-                                        W</th>
-                                    <th
-                                        class="px-4 py-3 text-center text-[10px] font-bold text-purple-500 uppercase tracking-wider">
-                                        P</th>
-                                    <th
-                                        class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
                                         IPA</th>
                                     <th
-                                        class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Categoria</th>
+                                        class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
+                                        Cat.</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @for (setor of setoresIPA; track setor.id_setor; let i = $index) {
                                 <tr
-                                    class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                    <td class="px-4 py-3 text-gray-500 dark:text-gray-500 font-mono text-xs">{{ i + 1 }}
-                                    </td>
-                                    <td class="px-4 py-3 font-semibold text-gray-800 dark:text-gray-200">{{
+                                    class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                    <td class="px-4 py-2.5 text-gray-400 font-mono text-xs">{{ i + 1 }}</td>
+                                    <td class="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200 text-xs">{{
                                         setor.ra_nome }}</td>
-                                    <td class="px-4 py-3 text-gray-500 dark:text-gray-400 font-mono text-xs">{{
-                                        setor.id_setor }}</td>
-                                    <td class="px-4 py-3 text-center">
-                                        <span
-                                            class="inline-block px-2 py-0.5 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded font-bold text-xs">{{
-                                            setor.modulo_h }}</span>
-                                    </td>
-                                    <td class="px-4 py-3 text-center">
-                                        <span
-                                            class="inline-block px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded font-bold text-xs">{{
-                                            setor.modulo_w }}</span>
-                                    </td>
-                                    <td class="px-4 py-3 text-center">
-                                        <span
-                                            class="inline-block px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded font-bold text-xs">{{
-                                            setor.modulo_p }}</span>
-                                    </td>
-                                    <td class="px-4 py-3">
+                                    <td class="px-4 py-2.5 text-center"><span
+                                            class="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 px-2 py-0.5 rounded font-bold text-xs">{{
+                                            setor.modulo_h }}</span></td>
+                                    <td class="px-4 py-2.5 text-center"><span
+                                            class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded font-bold text-xs">{{
+                                            setor.modulo_w }}</span></td>
+                                    <td class="px-4 py-2.5 text-center"><span
+                                            class="bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded font-bold text-xs">{{
+                                            setor.modulo_p }}</span></td>
+                                    <td class="px-4 py-2.5">
                                         <div class="flex items-center gap-2">
-                                            <span class="font-black text-gray-900 dark:text-gray-100 w-10">{{
+                                            <span class="font-black text-gray-900 dark:text-gray-100 w-10 text-xs">{{
                                                 setor.ipa_score }}</span>
                                             <div
-                                                class="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 max-w-[120px]">
-                                                <div class="h-2 rounded-full transition-all duration-500"
+                                                class="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 max-w-[100px]">
+                                                <div class="h-2 rounded-full"
                                                     [style.width.%]="getScoreBarWidth(setor.ipa_score)"
                                                     [style.background-color]="setor.ipa_cor"></div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3">
-                                        <span
-                                            class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                                    <td class="px-4 py-2.5"><span
+                                            class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
                                             [style.background-color]="setor.ipa_cor + '20'"
-                                            [style.color]="setor.ipa_cor">
-                                            {{ setor.ipa_categoria }}
-                                        </span>
-                                    </td>
+                                            [style.color]="setor.ipa_cor">{{ setor.ipa_categoria }}</span></td>
                                 </tr>
                                 }
                             </tbody>
@@ -193,111 +149,261 @@
             </div>
         </div>
 
+        <!-- ===== SIMULATION TAB ===== -->
+        <div *ngIf="activeTab === 'simulation' && !ipaLoading">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Controls -->
+                <div
+                    class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">⚙️ Parâmetros de Intervenção
+                    </h3>
+                    <!-- Setor select -->
+                    <div class="mb-5">
+                        <label
+                            class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 block">Setor</label>
+                        <select [(ngModel)]="selectedSetorIndex" (ngModelChange)="runSimulation()"
+                            class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200">
+                            @for (setor of setoresIPA; track setor.id_setor; let i = $index) {
+                            <option [ngValue]="i">#{{ i+1 }} {{ setor.ra_nome }} (IPA: {{ setor.ipa_score }})</option>
+                            }
+                        </select>
+                    </div>
+                    <!-- Cenário -->
+                    <div class="mb-5">
+                        <label
+                            class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 block">Cenário</label>
+                        <div class="flex gap-2">
+                            <button (click)="cenario = 'conservador'; runSimulation()"
+                                [class]="cenario === 'conservador' ? 'flex-1 px-3 py-2 bg-green-600 text-white text-xs font-bold rounded-lg' : 'flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700'">Conservador</button>
+                            <button (click)="cenario = 'medio'; runSimulation()"
+                                [class]="cenario === 'medio' ? 'flex-1 px-3 py-2 bg-green-600 text-white text-xs font-bold rounded-lg' : 'flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700'">Médio</button>
+                            <button (click)="cenario = 'agressivo'; runSimulation()"
+                                [class]="cenario === 'agressivo' ? 'flex-1 px-3 py-2 bg-green-600 text-white text-xs font-bold rounded-lg' : 'flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700'">Agressivo</button>
+                        </div>
+                    </div>
+                    <!-- Sliders -->
+                    <div class="space-y-5">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-xs font-bold text-green-700 dark:text-green-400 uppercase">🌳 Aumento
+                                    Cobertura Arbórea</label>
+                                <span class="text-sm font-black text-green-600">{{ simInput.aumentoCoberturaArborea
+                                    }}%</span>
+                            </div>
+                            <input type="range" min="0" max="50" step="1" [(ngModel)]="simInput.aumentoCoberturaArborea"
+                                (ngModelChange)="runSimulation()" class="w-full accent-green-600">
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase">🏗️ Redução
+                                    Impermeabilização</label>
+                                <span class="text-sm font-black text-blue-600">{{ simInput.reducaoImpermeabilizacao
+                                    }}%</span>
+                            </div>
+                            <input type="range" min="0" max="40" step="1"
+                                [(ngModel)]="simInput.reducaoImpermeabilizacao" (ngModelChange)="runSimulation()"
+                                class="w-full accent-blue-600">
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase">🌿
+                                    Aumento Área Verde</label>
+                                <span class="text-sm font-black text-emerald-600">{{ simInput.aumentoAreaVerde
+                                    }}%</span>
+                            </div>
+                            <input type="range" min="0" max="30" step="1" [(ngModel)]="simInput.aumentoAreaVerde"
+                                (ngModelChange)="runSimulation()" class="w-full accent-emerald-600">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div class="space-y-4" *ngIf="simResult && getSelectedSetor() as setor">
+                    <!-- Thermal -->
+                    <div
+                        class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-red-950 dark:to-orange-950 rounded-xl border border-red-200 dark:border-red-800 p-5">
+                        <h4 class="text-sm font-bold text-red-800 dark:text-red-400 uppercase tracking-wider mb-4">🌡️
+                            Simulação Térmica</h4>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="text-center">
+                                <p class="text-3xl font-black text-red-600 dark:text-red-400">{{ simResult.deltaLST }}°
+                                </p>
+                                <p class="text-[10px] text-red-500 font-bold uppercase mt-1">ΔLST</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-3xl font-black text-orange-600 dark:text-orange-400">{{
+                                    simResult.lstSimulado }}°</p>
+                                <p class="text-[10px] text-orange-500 font-bold uppercase mt-1">LST Simulado</p>
+                                <p class="text-[9px] text-gray-400 mt-0.5">Atual: {{ setor.lst_p90 }}°C</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-3xl font-black text-green-600 dark:text-green-400">+{{
+                                    simResult.deltaConfortoTermico }}%</p>
+                                <p class="text-[10px] text-green-600 font-bold uppercase mt-1">Conforto</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Hydrological -->
+                    <div
+                        class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950 rounded-xl border border-blue-200 dark:border-blue-800 p-5">
+                        <h4 class="text-sm font-bold text-blue-800 dark:text-blue-400 uppercase tracking-wider mb-4">💧
+                            Simulação Hídrica (SCS-CN)</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="text-center">
+                                <p class="text-3xl font-black text-blue-600 dark:text-blue-400">-{{
+                                    simResult.reducaoEscoamento }}%</p>
+                                <p class="text-[10px] text-blue-500 font-bold uppercase mt-1">Escoamento</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-3xl font-black text-cyan-600 dark:text-cyan-400">+{{
+                                    simResult.aumentoInfiltracao }}%</p>
+                                <p class="text-[10px] text-cyan-600 font-bold uppercase mt-1">Infiltração</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-center gap-8 mt-4 text-xs text-gray-500 dark:text-gray-400">
+                            <span>CN Original: <b class="text-gray-800 dark:text-gray-200">{{ simResult.cnOriginal
+                                    }}</b></span>
+                            <span>→</span>
+                            <span>CN Simulado: <b class="text-green-600">{{ simResult.cnSimulado }}</b></span>
+                        </div>
+                    </div>
+                    <!-- Context -->
+                    <div
+                        class="bg-gray-100 dark:bg-gray-800 rounded-xl p-4 text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                        <b class="text-gray-800 dark:text-gray-200">Cenário {{ cenario }}:</b> Coeficientes baseados em
+                        WRI Brasil, EPA Urban Heat Island Compendium, Oke (2017). SCS-CN simplificado conforme USDA
+                        TR-55.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SENSITIVITY TAB ===== -->
+        <div *ngIf="activeTab === 'sensitivity' && sensitivityResults.length > 0">
+            <div
+                class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 mb-6">
+                <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">🔬 Análise de Sensibilidade dos
+                    Pesos</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Variação de ±20% em cada módulo para avaliar
+                    robustez do ranking</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 dark:bg-gray-800">
+                            <tr>
+                                <th
+                                    class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
+                                    Cenário</th>
+                                <th class="px-4 py-3 text-center text-[10px] font-bold text-red-500 uppercase">H</th>
+                                <th class="px-4 py-3 text-center text-[10px] font-bold text-blue-500 uppercase">W</th>
+                                <th class="px-4 py-3 text-center text-[10px] font-bold text-purple-500 uppercase">P</th>
+                                <th
+                                    class="px-4 py-3 text-center text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
+                                    Média</th>
+                                <th
+                                    class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
+                                    Top 5 Setores</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (row of sensitivityResults; track row.label; let i = $index) {
+                            <tr class="border-t border-gray-100 dark:border-gray-800" [class.bg-green-50]="i === 0">
+                                <td class="px-4 py-3 font-semibold text-gray-800 dark:text-gray-200 text-xs">
+                                    {{ row.label }}
+                                    <span *ngIf="i === 0"
+                                        class="ml-2 text-[9px] bg-green-600 text-white px-1.5 py-0.5 rounded uppercase font-bold">Base</span>
+                                </td>
+                                <td class="px-4 py-3 text-center font-bold text-red-600 dark:text-red-400 text-xs">{{
+                                    row.pesoH }}</td>
+                                <td class="px-4 py-3 text-center font-bold text-blue-600 dark:text-blue-400 text-xs">{{
+                                    row.pesoW }}</td>
+                                <td
+                                    class="px-4 py-3 text-center font-bold text-purple-600 dark:text-purple-400 text-xs">
+                                    {{ row.pesoP }}</td>
+                                <td class="px-4 py-3 text-center font-black text-gray-900 dark:text-gray-100 text-xs">{{
+                                    row.avgScore }}</td>
+                                <td class="px-4 py-3">
+                                    <div class="flex flex-wrap gap-1">
+                                        @for (s of row.topSetores; track s.id) {
+                                        <span
+                                            class="inline-block px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded text-[10px] font-medium border border-gray-200 dark:border-gray-700">{{
+                                            s.ra }} ({{ s.score }})</span>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-xl p-5">
+                <h4 class="text-sm font-bold text-amber-800 dark:text-amber-400 mb-2">📝 Interpretação</h4>
+                <p class="text-sm text-amber-700 dark:text-amber-400 leading-relaxed">Se o ranking dos Top 5 <b>não
+                        muda</b> significativamente entre os cenários, isso indica <b>robustez</b> do modelo — os
+                    setores prioritários são consistentes independente dos pesos. Variações no Top 5 indicam que o setor
+                    está na <b>zona de transição</b> entre categorias.</p>
+            </div>
+        </div>
+
         <!-- ===== INDICATORS TAB ===== -->
         <div *ngIf="activeTab === 'indicators'">
-
-            <!-- City Navigation -->
-            <div class="flex items-center gap-3 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-                <span
-                    class="text-sm font-semibold text-gray-400 uppercase tracking-widest whitespace-nowrap mr-2">Cidade:</span>
+            <div class="flex items-center gap-3 mb-8 overflow-x-auto pb-2">
+                <span class="text-sm font-semibold text-gray-400 uppercase tracking-widest mr-2">Cidade:</span>
                 <div class="flex gap-2">
                     @for (city of currentCities; track city.name) {
                     <button (click)="selectCity(city)" [class.bg-green-700]="selectedCityName === city.name"
                         [class.text-white]="selectedCityName === city.name"
-                        [class.shadow-md]="selectedCityName === city.name"
-                        [class.border-green-700]="selectedCityName === city.name"
                         [class.bg-white]="selectedCityName !== city.name"
                         [class.dark:bg-gray-800]="selectedCityName !== city.name"
                         [class.text-gray-600]="selectedCityName !== city.name"
                         [class.dark:text-gray-300]="selectedCityName !== city.name"
                         [class.border-gray-200]="selectedCityName !== city.name"
                         [class.dark:border-gray-700]="selectedCityName !== city.name"
-                        class="px-4 py-2 rounded-xl border text-sm font-semibold transition-all duration-300 whitespace-nowrap">
-                        {{ city.name }}
-                    </button>
+                        class="px-4 py-2 rounded-xl border text-sm font-semibold transition-all whitespace-nowrap">{{
+                        city.name }}</button>
                     }
                 </div>
             </div>
-
-            <!-- Loading -->
             <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-20">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
-                <p class="text-gray-500 dark:text-gray-400 font-medium animate-pulse">Consultando APIs...</p>
             </div>
-
-            <!-- Indicator Cards -->
             <div *ngIf="!isLoading" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div
-                    class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-red-950 dark:to-orange-950 rounded-xl shadow-sm border border-red-100 dark:border-red-800 p-6 relative overflow-hidden group hover:shadow-md transition-all">
-                    <div class="relative z-10">
-                        <div class="flex items-start justify-between mb-2">
-                            <h3 class="text-sm font-bold text-red-800 dark:text-red-400 uppercase tracking-widest">
-                                Temperatura</h3>
-                            <span
-                                class="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300 text-[10px] font-semibold px-2 py-0.5 rounded border border-red-200 dark:border-red-700">Open-Meteo</span>
-                        </div>
-                        <p class="text-4xl font-black text-red-600 dark:text-red-400 tracking-tighter">{{
-                            indicators.temperature }}</p>
-                    </div>
+                    class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-red-950 dark:to-orange-950 rounded-xl shadow-sm border border-red-100 dark:border-red-800 p-6">
+                    <h3 class="text-sm font-bold text-red-800 dark:text-red-400 uppercase tracking-widest mb-2">
+                        Temperatura</h3>
+                    <p class="text-4xl font-black text-red-600 dark:text-red-400">{{ indicators.temperature }}</p>
                 </div>
                 <div
-                    class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950 rounded-xl shadow-sm border border-blue-100 dark:border-blue-800 p-6 relative overflow-hidden group hover:shadow-md transition-all">
-                    <div class="relative z-10">
-                        <div class="flex items-start justify-between mb-2">
-                            <h3 class="text-sm font-bold text-blue-800 dark:text-blue-400 uppercase tracking-widest">
-                                Alagamento</h3>
-                            <span
-                                class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 text-[10px] font-semibold px-2 py-0.5 rounded border border-blue-200 dark:border-blue-700">Open-Meteo</span>
-                        </div>
-                        <p class="text-3xl font-black text-blue-600 dark:text-blue-400 tracking-tight">{{
-                            indicators.floodRisk }}</p>
-                    </div>
+                    class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950 rounded-xl shadow-sm border border-blue-100 dark:border-blue-800 p-6">
+                    <h3 class="text-sm font-bold text-blue-800 dark:text-blue-400 uppercase tracking-widest mb-2">
+                        Alagamento</h3>
+                    <p class="text-3xl font-black text-blue-600 dark:text-blue-400">{{ indicators.floodRisk }}</p>
                 </div>
                 <div
-                    class="bg-gradient-to-br from-stone-50 to-stone-100 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-sm border border-stone-200 dark:border-gray-700 p-6 relative overflow-hidden group hover:shadow-md transition-all">
-                    <div class="relative z-10">
-                        <div class="flex items-start justify-between mb-2">
-                            <h3 class="text-sm font-bold text-stone-800 dark:text-stone-300 uppercase tracking-widest">
-                                Altitude</h3>
-                            <span
-                                class="bg-stone-200 dark:bg-gray-700 text-stone-800 dark:text-stone-300 text-[10px] font-semibold px-2 py-0.5 rounded border border-stone-300 dark:border-gray-600">Open-Elevation</span>
-                        </div>
-                        <p class="text-4xl font-black text-stone-600 dark:text-stone-300 tracking-tighter">{{
-                            indicators.elevation }}</p>
-                    </div>
+                    class="bg-gradient-to-br from-stone-50 to-stone-100 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-sm border border-stone-200 dark:border-gray-700 p-6">
+                    <h3 class="text-sm font-bold text-stone-800 dark:text-stone-300 uppercase tracking-widest mb-2">
+                        Altitude</h3>
+                    <p class="text-4xl font-black text-stone-600 dark:text-stone-300">{{ indicators.elevation }}</p>
                 </div>
             </div>
-
-            <!-- Timeline -->
             <div *ngIf="!isLoading && timeline.length > 0"
                 class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 mb-8">
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">📊 Timeline de Temperatura (7
-                            dias)</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Open-Meteo Forecast API</p>
-                    </div>
-                    <div class="flex items-center gap-4 text-xs">
-                        <span class="flex items-center gap-1 text-gray-700 dark:text-gray-300"><span
-                                class="w-3 h-3 bg-red-400 rounded-sm inline-block"></span> Máxima</span>
-                        <span class="flex items-center gap-1 text-gray-700 dark:text-gray-300"><span
-                                class="w-3 h-3 bg-blue-400 rounded-sm inline-block"></span> Mínima</span>
-                    </div>
-                </div>
-                <div class="flex items-end gap-3" style="height: 220px;">
+                <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">📊 Timeline (7 dias)</h3>
+                <div class="flex items-end gap-3" style="height: 200px;">
                     @for (point of timeline; track point.date) {
                     <div class="flex-1 flex flex-col items-center h-full justify-end">
                         <span class="text-[11px] font-bold text-red-600 dark:text-red-400 mb-1">{{ point.tempMax
                             }}°</span>
-                        <div class="w-4/5 max-w-[40px] bg-gradient-to-t from-red-500 to-orange-300 rounded-t-md shadow-sm"
+                        <div class="w-4/5 max-w-[40px] bg-gradient-to-t from-red-500 to-orange-300 rounded-t-md"
                             [style.height.px]="getBarHeightPx(point.tempMax)"></div>
                         <div class="h-1"></div>
-                        <div class="w-4/5 max-w-[40px] bg-gradient-to-t from-blue-500 to-cyan-300 rounded-t-md shadow-sm"
+                        <div class="w-4/5 max-w-[40px] bg-gradient-to-t from-blue-500 to-cyan-300 rounded-t-md"
                             [style.height.px]="getBarHeightPx(point.tempMin)"></div>
                         <span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 mt-1">{{ point.tempMin
                             }}°</span>
-                        <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 font-medium">{{
-                            formatDate(point.date) }}</span>
+                        <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{{ formatDate(point.date)
+                            }}</span>
                     </div>
                     }
                 </div>
