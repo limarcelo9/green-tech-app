@@ -53,6 +53,26 @@ export class AnalyticsComponent implements OnInit {
   };
   simResult: SimulationResult | null = null;
   investimentoSimulacao: number | null = null;
+  investimentoFormatado = '';
+
+  onInvestimentoChange(value: string) {
+    if (!value) {
+      this.investimentoSimulacao = null;
+      this.investimentoFormatado = '';
+      this.runSimulation();
+      return;
+    }
+    const numbers = value.replace(/\D/g, '');
+    if (!numbers) {
+      this.investimentoSimulacao = null;
+      this.investimentoFormatado = '';
+    } else {
+      const numberValue = parseInt(numbers, 10);
+      this.investimentoSimulacao = numberValue / 100;
+      this.investimentoFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(this.investimentoSimulacao);
+    }
+    this.runSimulation();
+  }
 
   // Sensitivity
   sensitivityResults: SensitivityResult[] = [];
