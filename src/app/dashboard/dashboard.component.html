@@ -17,36 +17,7 @@
     class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-4 w-full h-[650px] overflow-hidden flex flex-col perspective-1000">
     <!-- Map Controls -->
     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <!-- Map Type Toggles -->
-        <div class="flex gap-2">
-            <button (click)="setMapType('satellite')" [class.bg-green-600]="mapOptions.mapTypeId === 'satellite'"
-                [class.text-white]="mapOptions.mapTypeId === 'satellite'"
-                [class.bg-gray-100]="mapOptions.mapTypeId !== 'satellite'"
-                [class.dark:bg-gray-700]="mapOptions.mapTypeId !== 'satellite'"
-                [class.text-gray-700]="mapOptions.mapTypeId !== 'satellite'"
-                [class.dark:text-gray-300]="mapOptions.mapTypeId !== 'satellite'"
-                class="px-3 py-1.5 rounded-md text-sm font-medium hover:bg-green-500 hover:text-white transition-colors">
-                Satellite
-            </button>
-            <button (click)="setMapType('roadmap')" [class.bg-green-600]="mapOptions.mapTypeId === 'roadmap'"
-                [class.text-white]="mapOptions.mapTypeId === 'roadmap'"
-                [class.bg-gray-100]="mapOptions.mapTypeId !== 'roadmap'"
-                [class.dark:bg-gray-700]="mapOptions.mapTypeId !== 'roadmap'"
-                [class.text-gray-700]="mapOptions.mapTypeId !== 'roadmap'"
-                [class.dark:text-gray-300]="mapOptions.mapTypeId !== 'roadmap'"
-                class="px-3 py-1.5 rounded-md text-sm font-medium hover:bg-green-500 hover:text-white transition-colors">
-                Roadmap
-            </button>
-            <button (click)="setMapType('terrain')" [class.bg-green-600]="mapOptions.mapTypeId === 'terrain'"
-                [class.text-white]="mapOptions.mapTypeId === 'terrain'"
-                [class.bg-gray-100]="mapOptions.mapTypeId !== 'terrain'"
-                [class.dark:bg-gray-700]="mapOptions.mapTypeId !== 'terrain'"
-                [class.text-gray-700]="mapOptions.mapTypeId !== 'terrain'"
-                [class.dark:text-gray-300]="mapOptions.mapTypeId !== 'terrain'"
-                class="px-3 py-1.5 rounded-md text-sm font-medium hover:bg-green-500 hover:text-white transition-colors">
-                Terrain
-            </button>
-        </div>
+
 
         <!-- Dynamic cities/regions for selected state -->
         <div class="flex items-center gap-1.5 border-l border-gray-200 dark:border-gray-700 pl-3 flex-wrap">
@@ -86,17 +57,7 @@
     <!-- Map Provider -->
     <div class="flex-1 w-full rounded-2xl overflow-hidden border-4 border-white dark:border-gray-800 shadow-[0_20px_50px_rgba(8,_112,_184,_0.7)] transition-transform duration-300 hover:shadow-[0_30px_60px_rgba(8,_112,_184,_0.9)] relative"
         [style.transform]="mapTransform">
-        <google-map height="100%" width="100%" [center]="center" [zoom]="zoom" [options]="mapOptions"
-            (mapClick)="onMapClick($event)">
-            @for (city of currentCities; track city.name) {
-            <map-marker [position]="{ lat: city.lat, lng: city.lng }" [title]="city.name"
-                (mapClick)="navigateToCityAnalytics(city)">
-            </map-marker>
-            }
-            @if (selectedPin) {
-            <map-marker [position]="selectedPin" title="📍 Ponto selecionado"></map-marker>
-            }
-        </google-map>
+        <div id="dashboard-map" class="w-full h-full z-0"></div>
 
         <!-- Floating Indicator Panel -->
         <div *ngIf="selectedPin"
