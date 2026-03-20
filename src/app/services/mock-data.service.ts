@@ -100,6 +100,15 @@ export class MockDataService {
     'TO': [{ name: 'Palmas', lat: -10.1689, lng: -48.3317 }, { name: 'Araguaína', lat: -7.1908, lng: -48.2074 }]
   };
 
+  // ===================== CIDADES PILOTO (MVP) =====================
+  readonly pilotCities: CityInfo[] = [
+    { name: 'São Paulo', lat: -23.5505, lng: -46.6333 },
+    { name: 'Belo Horizonte', lat: -19.9167, lng: -43.9345 },
+    { name: 'Porto Alegre', lat: -30.0346, lng: -51.2177 },
+    { name: 'Recife', lat: -8.0476, lng: -34.8770 },
+    { name: 'Petrópolis', lat: -22.5050, lng: -43.1786 }
+  ];
+
   // ===================== REGION DATA (DF SPECIFIC) =====================
   private regionData: Record<string, { name: string, info: string, ibgeId: string }> = {
     'plano-piloto': { name: 'Plano Piloto', ibgeId: '53001080506', info: 'Apesar de altamente arborizada, as vastas extensões de asfalto do Eixo Monumental contribuem para o aquecimento diurno. Soluções Baseadas na Natureza (SBN) são recomendadas para parques lineares.' },

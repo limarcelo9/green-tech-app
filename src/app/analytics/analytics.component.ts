@@ -19,9 +19,8 @@ export class AnalyticsComponent implements OnInit {
   ipaService = inject(IpaService);
   simService = inject(SimulationService);
 
-  selectedState = 'DF';
-  currentCities: CityInfo[] = [];
-  selectedCityName = 'Plano Piloto';
+
+  selectedCityName = 'São Paulo';
   isLoading = true;
   isCustomLocation = false;
 
@@ -78,19 +77,14 @@ export class AnalyticsComponent implements OnInit {
   sensitivityResults: SensitivityResult[] = [];
 
   ngOnInit() {
-
-    this.currentCities = this.dataService.citiesByState['DF'] || [];
-
     this.route.queryParams.subscribe(qp => {
       const lat = parseFloat(qp['lat']);
       const lng = parseFloat(qp['lng']);
       const name = qp['name'] || null;
-      const state = qp['state'] || null;
       if (!isNaN(lat) && !isNaN(lng)) {
         this.isCustomLocation = true;
-        if (state) { this.selectedState = state; this.currentCities = this.dataService.citiesByState[state] || []; }
         this.selectedCityName = name || `📍 ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-        this.locationInfo = { name: this.selectedCityName, info: name ? `${name} (${state}). Tempo real.` : 'Localização no mapa.' };
+        this.locationInfo = { name: this.selectedCityName, info: name ? `${name}. Tempo real.` : 'Localização no mapa.' };
         this.isLoading = true;
         this.fetchByCoords(lat, lng);
         return;
@@ -99,24 +93,22 @@ export class AnalyticsComponent implements OnInit {
 
     this.route.paramMap.subscribe(() => {
       if (!this.isCustomLocation) {
-        this.selectCity(this.currentCities[0] || { name: 'Plano Piloto', lat: -15.7938, lng: -47.8827 });
+        this.selectCity(this.dataService.pilotCities[0]);
       }
     });
   }
 
-  setEstado(sigla: string) {
-    this.selectedState = sigla;
-    this.currentCities = this.dataService.citiesByState[sigla] || [];
-    this.isCustomLocation = false;
-    if (this.currentCities.length > 0) this.selectCity(this.currentCities[0]);
+  selectCityByName(name: string) {
+    const city = this.dataService.pilotCities.find((c: CityInfo) => c.name === name);
+    if (city) this.selectCity(city);
   }
 
   selectCity(city: CityInfo) {
     this.selectedCityName = city.name;
     this.isCustomLocation = false;
-    this.locationInfo = { name: city.name, info: `${city.name}, ${this.dataService.states[this.selectedState]?.name || ''}. Tempo real.` };
+    this.locationInfo = { name: city.name, info: `Análise territorial para ${city.name}.` };
     this.isLoading = true;
-    this.loadIPA(city.name, this.selectedState);
+    this.loadIPA(city.name, '');
     this.fetchByCoords(city.lat, city.lng);
   }
 

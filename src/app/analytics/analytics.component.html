@@ -13,12 +13,11 @@
             </div>
             <div class="flex items-center gap-3">
                 <label
-                    class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado:</label>
-                <select (change)="setEstado($any($event.target).value)"
+                    class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Metrópole Piloto:</label>
+                <select (change)="selectCityByName($any($event.target).value)"
                     class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm cursor-pointer">
-                    @for (key of dataService.stateKeys; track key) {
-                    <option [value]="key" [selected]="key === selectedState">{{ dataService.states[key].sigla }} - {{
-                        dataService.states[key].name }}</option>
+                    @for (city of dataService.pilotCities; track city.name) {
+                    <option [value]="city.name" [selected]="city.name === selectedCityName">{{ city.name }}</option>
                     }
                 </select>
             </div>
@@ -469,9 +468,9 @@
         <!-- ===== INDICATORS TAB ===== -->
         <div *ngIf="activeTab === 'indicators'">
             <div class="flex items-center gap-3 mb-8 overflow-x-auto pb-2">
-                <span class="text-sm font-semibold text-gray-400 uppercase tracking-widest mr-2">Cidade:</span>
+                <span class="text-sm font-semibold text-gray-400 uppercase tracking-widest mr-2">Cidade Piloto:</span>
                 <div class="flex gap-2">
-                    @for (city of currentCities; track city.name) {
+                    @for (city of dataService.pilotCities; track city.name) {
                     <button (click)="selectCity(city)" [class.bg-green-700]="selectedCityName === city.name"
                         [class.text-white]="selectedCityName === city.name"
                         [class.bg-white]="selectedCityName !== city.name"
