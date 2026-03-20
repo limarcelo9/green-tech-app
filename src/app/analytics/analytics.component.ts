@@ -52,29 +52,14 @@ export class AnalyticsComponent implements OnInit {
     telhadosVerdes: 10, telhadosFrios: 20, pavimentosFrios: 15
   };
   simResult: SimulationResult | null = null;
+  investimentoSimulacao: number | null = null;
 
   // Sensitivity
   sensitivityResults: SensitivityResult[] = [];
 
   ngOnInit() {
-    this.currentCities = this.dataService.citiesByState['DF'] || [];
 
-    this.ipaService.getSetoresIPA().subscribe(data => {
-      this.setoresIPA = data;
-      this.ipaLoading = false;
-      this.ipaStats = {
-        muitoAlta: data.filter(s => s.ipa_categoria === 'Muito Alta').length,
-        alta: data.filter(s => s.ipa_categoria === 'Alta').length,
-        media: data.filter(s => s.ipa_categoria === 'Média').length,
-        baixa: data.filter(s => s.ipa_categoria === 'Baixa').length,
-        avgScore: +(data.reduce((sum, s) => sum + s.ipa_score, 0) / data.length).toFixed(1),
-        maxScore: Math.max(...data.map(s => s.ipa_score)),
-      };
-      // Auto-run simulation for top-ranked sector
-      this.runSimulation();
-      // Run sensitivity
-      this.sensitivityResults = this.simService.runSensitivityAnalysis(data);
-    });
+    this.currentCities = this.dataService.citiesByState['DF'] || [];
 
     this.route.queryParams.subscribe(qp => {
       const lat = parseFloat(qp['lat']);
@@ -111,7 +96,28 @@ export class AnalyticsComponent implements OnInit {
     this.isCustomLocation = false;
     this.locationInfo = { name: city.name, info: `${city.name}, ${this.dataService.states[this.selectedState]?.name || ''}. Tempo real.` };
     this.isLoading = true;
+    this.loadIPA(city.name, this.selectedState);
     this.fetchByCoords(city.lat, city.lng);
+  }
+
+  loadIPA(cityName: string, state: string) {
+    this.ipaLoading = true;
+    this.ipaService.getSetoresIPA(cityName, state).subscribe(data => {
+      this.setoresIPA = data;
+      this.ipaLoading = false;
+      this.ipaStats = {
+        muitoAlta: data.filter(s => s.ipa_categoria === 'Muito Alta').length,
+        alta: data.filter(s => s.ipa_categoria === 'Alta').length,
+        media: data.filter(s => s.ipa_categoria === 'Média').length,
+        baixa: data.filter(s => s.ipa_categoria === 'Baixa').length,
+        avgScore: +(data.reduce((sum, s) => sum + s.ipa_score, 0) / data.length).toFixed(1),
+        maxScore: Math.max(...data.map(s => s.ipa_score)),
+      };
+      
+      this.selectedSetorIndex = 0;
+      this.runSimulation();
+      this.sensitivityResults = this.simService.runSensitivityAnalysis(data);
+    });
   }
 
   private fetchByCoords(lat: number, lng: number) {
@@ -130,6 +136,9 @@ export class AnalyticsComponent implements OnInit {
   runSimulation() {
     if (this.setoresIPA.length === 0) return;
     const setor = this.setoresIPA[this.selectedSetorIndex];
+    if (this.investimentoSimulacao && this.investimentoSimulacao > 0) {
+      this.simInput = this.simService.calcularIntervencoesPorInvestimento(this.investimentoSimulacao);
+    }
     this.simResult = this.simService.simulateThermal(setor, this.simInput, this.cenario);
   }
 

@@ -163,14 +163,25 @@
                     <!-- RA select -->
                     <div class="mb-4">
                         <label
-                            class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 block">Região
-                            Administrativa</label>
+                            class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 block">Região / Setor</label>
                         <select [(ngModel)]="selectedSetorIndex" (ngModelChange)="runSimulation()"
                             class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200">
                             @for (setor of setoresIPA; track setor.id_ra; let i = $index) {
                             <option [ngValue]="i">#{{ i+1 }} {{ setor.ra_nome }} (IPA: {{ setor.ipa_score }})</option>
                             }
                         </select>
+                    </div>
+                    <!-- Investimento -->
+                    <div class="mb-4">
+                        <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 block">
+                            💰 Orçamento (Investimento em R$)
+                        </label>
+                        <input type="number" [(ngModel)]="investimentoSimulacao" (ngModelChange)="runSimulation()"
+                            placeholder="Ex: 5000000"
+                            class="w-full px-3 py-2 bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 rounded-lg text-sm font-bold text-green-900 dark:text-green-100">
+                        <p class="text-[10px] text-gray-500 mt-1" *ngIf="investimentoSimulacao && investimentoSimulacao > 0">
+                            Intervenções calculadas automaticamente com base no orçamento (+R$).
+                        </p>
                     </div>
                     <!-- Cenário -->
                     <div class="mb-4">
@@ -198,7 +209,8 @@
                                     }}%</span>
                             </div>
                             <input type="range" min="0" max="50" step="1" [(ngModel)]="simInput.aumentoCoberturaArborea"
-                                (ngModelChange)="runSimulation()" class="w-full accent-green-600">
+                                (ngModelChange)="runSimulation()" [disabled]="(investimentoSimulacao || 0) > 0" 
+                                class="w-full accent-green-600 disabled:opacity-40">
                         </div>
                         <div>
                             <div class="flex justify-between mb-0.5">
@@ -208,7 +220,8 @@
                                     }}%</span>
                             </div>
                             <input type="range" min="0" max="30" step="1" [(ngModel)]="simInput.aumentoAreaVerde"
-                                (ngModelChange)="runSimulation()" class="w-full accent-emerald-600">
+                                (ngModelChange)="runSimulation()" [disabled]="(investimentoSimulacao || 0) > 0" 
+                                class="w-full accent-emerald-600 disabled:opacity-40">
                         </div>
                         <div>
                             <div class="flex justify-between mb-0.5">
@@ -219,7 +232,8 @@
                             </div>
                             <input type="range" min="0" max="40" step="1"
                                 [(ngModel)]="simInput.reducaoImpermeabilizacao" (ngModelChange)="runSimulation()"
-                                class="w-full accent-blue-600">
+                                [disabled]="(investimentoSimulacao || 0) > 0" 
+                                class="w-full accent-blue-600 disabled:opacity-40">
                         </div>
                     </div>
                     <!-- Section: Infrastructure -->
@@ -234,7 +248,8 @@
                                 <span class="text-sm font-black text-green-700">{{ simInput.telhadosVerdes }}%</span>
                             </div>
                             <input type="range" min="0" max="50" step="1" [(ngModel)]="simInput.telhadosVerdes"
-                                (ngModelChange)="runSimulation()" class="w-full accent-green-700">
+                                (ngModelChange)="runSimulation()" [disabled]="(investimentoSimulacao || 0) > 0" 
+                                class="w-full accent-green-700 disabled:opacity-40">
                         </div>
                         <div>
                             <div class="flex justify-between mb-0.5">
@@ -243,7 +258,8 @@
                                 <span class="text-sm font-black text-violet-600">{{ simInput.telhadosFrios }}%</span>
                             </div>
                             <input type="range" min="0" max="80" step="1" [(ngModel)]="simInput.telhadosFrios"
-                                (ngModelChange)="runSimulation()" class="w-full accent-violet-600">
+                                (ngModelChange)="runSimulation()" [disabled]="(investimentoSimulacao || 0) > 0" 
+                                class="w-full accent-violet-600 disabled:opacity-40">
                             <p class="text-[9px] text-gray-400 mt-0.5">Phoenix: -7°C LST | Malásia: -13% energia</p>
                         </div>
                         <div>
@@ -253,7 +269,8 @@
                                 <span class="text-sm font-black text-purple-600">{{ simInput.pavimentosFrios }}%</span>
                             </div>
                             <input type="range" min="0" max="60" step="1" [(ngModel)]="simInput.pavimentosFrios"
-                                (ngModelChange)="runSimulation()" class="w-full accent-purple-600">
+                                (ngModelChange)="runSimulation()" [disabled]="(investimentoSimulacao || 0) > 0" 
+                                class="w-full accent-purple-600 disabled:opacity-40">
                             <p class="text-[9px] text-gray-400 mt-0.5">Albedo asfalto 0.05 → reflexivo 0.35</p>
                         </div>
                     </div>
@@ -464,20 +481,30 @@
             </div>
             <div *ngIf="!isLoading && timeline.length > 0"
                 class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 mb-8">
-                <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">📊 Timeline (7 dias)</h3>
+                <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">📊 Seca e Enchentes (7 dias)</h3>
                 <div class="flex items-end gap-3" style="height: 200px;">
                     @for (point of timeline; track point.date) {
-                    <div class="flex-1 flex flex-col items-center h-full justify-end">
+                    <div class="flex-1 flex flex-col items-center h-full justify-end relative">
                         <span class="text-[11px] font-bold text-red-600 dark:text-red-400 mb-1">{{ point.tempMax
                             }}°</span>
-                        <div class="w-4/5 max-w-[40px] bg-gradient-to-t from-red-500 to-orange-300 rounded-t-md"
-                            [style.height.px]="getBarHeightPx(point.tempMax)"></div>
-                        <div class="h-1"></div>
-                        <div class="w-4/5 max-w-[40px] bg-gradient-to-t from-blue-500 to-cyan-300 rounded-t-md"
-                            [style.height.px]="getBarHeightPx(point.tempMin)"></div>
-                        <span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 mt-1">{{ point.tempMin
-                            }}°</span>
-                        <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{{ formatDate(point.date)
+                        <!-- Custom stacked column layout -->
+                        <div class="flex items-end gap-1 mb-1 relative" style="height: 120px;">
+                            <div class="w-2.5 sm:w-4 bg-gradient-to-t from-red-500 to-orange-300 rounded-t-sm"
+                                [style.height.px]="getBarHeightPx(point.tempMax)"></div>
+                            <div class="w-2.5 sm:w-4 bg-gradient-to-t from-blue-500 to-cyan-300 rounded-t-sm"
+                                [style.height.px]="getBarHeightPx(point.tempMin)"></div>
+                        </div>
+                        
+                        <!-- Rain block -->
+                        <div class="w-full max-w-[40px] flex justify-center items-end" style="height: 30px;">
+                            <div *ngIf="point.precipitation > 0" class="w-full bg-blue-600/30 rounded-t flex items-end justify-center"
+                                [style.height.px]="point.precipitation * 2 + 5" [style.max-height.px]="30">
+                                <span class="text-[8px] font-black text-blue-800 dark:text-blue-300 pb-0.5">{{ point.precipitation }}mm</span>
+                            </div>
+                            <div *ngIf="!point.precipitation" class="h-1"></div>
+                        </div>
+
+                        <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 mt-2">{{ formatDate(point.date)
                             }}</span>
                     </div>
                     }

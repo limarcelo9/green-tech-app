@@ -20,6 +20,7 @@ export interface TimelinePoint {
   date: string;
   tempMax: number;
   tempMin: number;
+  precipitation: number;
 }
 
 @Injectable({
@@ -149,17 +150,19 @@ export class MockDataService {
     start.setDate(start.getDate() - 7);
 
     const fmt = (d: Date) => d.toISOString().split('T')[0];
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FSao_Paulo&start_date=${fmt(start)}&end_date=${fmt(end)}`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America%2FSao_Paulo&start_date=${fmt(start)}&end_date=${fmt(end)}`;
 
     return this.http.get<any>(url).pipe(
       map(res => {
         const dates: string[] = res.daily?.time || [];
         const maxTemps: number[] = res.daily?.temperature_2m_max || [];
         const minTemps: number[] = res.daily?.temperature_2m_min || [];
+        const precipitations: number[] = res.daily?.precipitation_sum || [];
         return dates.map((d: string, i: number) => ({
           date: d,
           tempMax: maxTemps[i] ?? 0,
-          tempMin: minTemps[i] ?? 0
+          tempMin: minTemps[i] ?? 0,
+          precipitation: precipitations[i] ?? 0
         }));
       }),
       catchError(() => of([]))

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, shareReplay } from 'rxjs';
+import { Observable, map, shareReplay, of } from 'rxjs';
 
 export interface RAraw {
     id_ra: string;
@@ -36,18 +36,47 @@ export interface SetorIPA extends RAraw {
 @Injectable({ providedIn: 'root' })
 export class IpaService {
     private http = inject(HttpClient);
-    private cache$!: Observable<SetorIPA[]>;
+    private cache$: Record<string, Observable<SetorIPA[]>> = {};
 
-    getSetoresIPA(): Observable<SetorIPA[]> {
-        if (!this.cache$) {
-            this.cache$ = this.http.get('assets/data/indicadores_base_DF.csv', { responseType: 'text' })
-                .pipe(
-                    map(csv => this.parseCSV(csv)),
+    getSetoresIPA(cityName: string = "Plano Piloto", state: string = "DF"): Observable<SetorIPA[]> {
+        const cacheKey = `${cityName}-${state}`;
+        if (!this.cache$[cacheKey]) {
+            if (cityName === 'Plano Piloto' && state === 'DF') {
+                this.cache$[cacheKey] = this.http.get('assets/data/indicadores_base_DF.csv', { responseType: 'text' })
+                    .pipe(
+                        map(csv => this.parseCSV(csv)),
+                        map(rows => this.calculateIPA(rows)),
+                        shareReplay(1)
+                    );
+            } else {
+                this.cache$[cacheKey] = of(this.generateMockSetores(cityName)).pipe(
                     map(rows => this.calculateIPA(rows)),
                     shareReplay(1)
                 );
+            }
         }
-        return this.cache$;
+        return this.cache$[cacheKey];
+    }
+
+    private generateMockSetores(cityName: string): RAraw[] {
+        const setores: RAraw[] = [];
+        const bairrosMock = ["Centro", "Zona Norte", "Zona Sul", "Zona Leste", "Zona Oeste", "Distrito Industrial", "Jardim Central", "Vila Nova"];
+        
+        for (let i = 0; i < bairrosMock.length; i++) {
+            setores.push({
+                id_ra: `${cityName.replace(/\s+/g, '-').toLowerCase()}-${i}`,
+                nome_ra: `${bairrosMock[i]}`,
+                lst_p90: +(30 + Math.random() * 10).toFixed(1),
+                ndvi_medio: +(0.1 + Math.random() * 0.5).toFixed(2),
+                impermeabilizacao_pct: +(20 + Math.random() * 70).toFixed(1),
+                declividade_media: +(1 + Math.random() * 15).toFixed(1),
+                twi: +(5 + Math.random() * 10).toFixed(1),
+                densidade_pop: +(10 + Math.random() * 150).toFixed(1),
+                renda_media: +(1000 + Math.random() * 9000).toFixed(2),
+                percentual_idosos: +(5 + Math.random() * 20).toFixed(1)
+            });
+        }
+        return setores;
     }
 
     private parseCSV(csv: string): RAraw[] {

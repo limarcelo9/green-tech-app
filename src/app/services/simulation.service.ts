@@ -195,4 +195,23 @@ export class SimulationService {
             };
         });
     }
+
+    // === INVESTIMENTO ===
+    calcularIntervencoesPorInvestimento(investimento: number): SimulationInput {
+        const custoArborea = 200000;
+        const custoAreaVerde = 500000;
+        const custoDesimperm = 400000;
+        const custoTelhadosVerdes = 800000;
+        const custoTelhadosFrios = 150000;
+        const custoPavimentosFrios = 300000;
+
+        return {
+            aumentoCoberturaArborea: Math.min(50, Math.floor((investimento * 0.25) / custoArborea)),
+            aumentoAreaVerde: Math.min(30, Math.floor((investimento * 0.15) / custoAreaVerde)),
+            reducaoImpermeabilizacao: Math.min(40, Math.floor((investimento * 0.20) / custoDesimperm)),
+            telhadosVerdes: Math.min(50, Math.floor((investimento * 0.15) / custoTelhadosVerdes)),
+            telhadosFrios: Math.min(80, Math.floor((investimento * 0.10) / custoTelhadosFrios)),
+            pavimentosFrios: Math.min(60, Math.floor((investimento * 0.15) / custoPavimentosFrios))
+        };
+    }
 }
