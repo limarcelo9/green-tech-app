@@ -11,7 +11,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 })
 export class AppComponent {
   title = 'green-tech-app';
-  isDark = false;
+  isDark = true;
 
   toggleDarkMode() {
     this.isDark = !this.isDark;
