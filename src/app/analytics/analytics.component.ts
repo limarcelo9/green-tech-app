@@ -55,6 +55,10 @@ export class AnalyticsComponent implements OnInit {
   investimentoSimulacao: number | null = null;
   investimentoFormatado = '';
 
+  // Optimization Assistant state
+  activeGoal: string | null = null;
+  goalMessage: string = 'Selecione um objetivo acima para otimizar os parâmetros via Inteligência Artificial.';
+
   onInvestimentoChange(value: string) {
     if (!value) {
       this.investimentoSimulacao = null;
@@ -208,4 +212,44 @@ export class AnalyticsComponent implements OnInit {
   getBarHeightPx(temp: number): number { return Math.max(8, (temp / this.timelineMax) * 120); }
   formatDate(dateStr: string): string { return new Date(dateStr + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }); }
   getScoreBarWidth(score: number): number { return Math.min(100, Math.max(2, score)); }
+
+  // ---- Optimization Assistant ----
+  setOptimizationGoal(goal: 'cooling' | 'drainage' | 'balance') {
+    this.activeGoal = goal;
+    if (goal === 'cooling') {
+      this.goalMessage = 'Foco Térmico: Priorizando Cobertura Arbórea densa e Telhados Frios para mitigar agressivamente as Ilhas de Calor.';
+      this.cenario = 'agressivo';
+      this.simInput = {
+        aumentoCoberturaArborea: 40,
+        aumentoAreaVerde: 15,
+        reducaoImpermeabilizacao: 10,
+        telhadosVerdes: 20,
+        telhadosFrios: 60,
+        pavimentosFrios: 30
+      };
+    } else if (goal === 'drainage') {
+      this.goalMessage = 'Foco Hídrico: Focando na desimpermeabilização drástica e Telhados Verdes pesados para reter grandes volumes de águas pluviais.';
+      this.cenario = 'agressivo';
+      this.simInput = {
+        aumentoCoberturaArborea: 15,
+        aumentoAreaVerde: 30,
+        reducaoImpermeabilizacao: 40,
+        telhadosVerdes: 45,
+        telhadosFrios: 10,
+        pavimentosFrios: 10
+      };
+    } else {
+      this.goalMessage = 'Foco Custo-Benefício: Distribuição harmônica equilibrando redução térmica eficiente e ganho hídrico seguro, modelo intermediário.';
+      this.cenario = 'medio';
+      this.simInput = {
+        aumentoCoberturaArborea: 25,
+        aumentoAreaVerde: 20,
+        reducaoImpermeabilizacao: 25,
+        telhadosVerdes: 30,
+        telhadosFrios: 40,
+        pavimentosFrios: 20
+      };
+    }
+    this.runSimulation();
+  }
 }
