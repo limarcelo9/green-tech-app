@@ -25,9 +25,9 @@
 
         <!-- Tabs -->
         <div class="flex gap-1 mb-6 bg-gray-200 dark:bg-gray-800 p-1 rounded-xl w-fit flex-wrap">
-            <button (click)="setTab('ipa')"
-                [class]="activeTab === 'ipa' ? 'px-5 py-2 bg-white dark:bg-gray-700 text-green-700 dark:text-green-400 font-bold rounded-lg shadow-sm text-sm' : 'px-5 py-2 text-gray-500 dark:text-gray-400 font-medium text-sm rounded-lg'">🏗️
-                IPA Ranking</button>
+            <button (click)="setTab('ipac')"
+                [class]="activeTab === 'ipac' ? 'px-5 py-2 bg-white dark:bg-gray-700 text-green-700 dark:text-green-400 font-bold rounded-lg shadow-sm text-sm' : 'px-5 py-2 text-gray-500 dark:text-gray-400 font-medium text-sm rounded-lg'">🏗️
+                IPAC Ranking</button>
             <button (click)="setTab('simulation')"
                 [class]="activeTab === 'simulation' ? 'px-5 py-2 bg-white dark:bg-gray-700 text-green-700 dark:text-green-400 font-bold rounded-lg shadow-sm text-sm' : 'px-5 py-2 text-gray-500 dark:text-gray-400 font-medium text-sm rounded-lg'">⚡
                 Simulação</button>
@@ -39,42 +39,42 @@
                 Indicadores</button>
         </div>
 
-        <!-- ===== IPA TAB ===== -->
-        <div *ngIf="activeTab === 'ipa'">
-            <div *ngIf="ipaLoading" class="flex flex-col items-center justify-center py-20">
+        <!-- ===== IPAC TAB ===== -->
+        <div *ngIf="activeTab === 'ipac'">
+            <div *ngIf="ipacLoading" class="flex flex-col items-center justify-center py-20">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
-                <p class="text-gray-500 dark:text-gray-400 font-medium animate-pulse">Calculando IPA-IVU...</p>
+                <p class="text-gray-500 dark:text-gray-400 font-medium animate-pulse">Calculando IPAC-IVU...</p>
             </div>
-            <div *ngIf="!ipaLoading">
+            <div *ngIf="!ipacLoading">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div
                         class="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl p-4 text-center">
-                        <p class="text-3xl font-black text-red-600 dark:text-red-400">{{ ipaStats.muitoAlta }}</p>
+                        <p class="text-3xl font-black text-red-600 dark:text-red-400">{{ ipacStats.muitoAlta }}</p>
                         <p class="text-xs font-bold text-red-700 dark:text-red-500 uppercase tracking-wider mt-1">🔴
                             Muito Alta</p>
                     </div>
                     <div
                         class="bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-xl p-4 text-center">
-                        <p class="text-3xl font-black text-orange-600 dark:text-orange-400">{{ ipaStats.alta }}</p>
+                        <p class="text-3xl font-black text-orange-600 dark:text-orange-400">{{ ipacStats.alta }}</p>
                         <p class="text-xs font-bold text-orange-700 dark:text-orange-500 uppercase tracking-wider mt-1">
                             🟠 Alta</p>
                     </div>
                     <div
                         class="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-center">
-                        <p class="text-3xl font-black text-yellow-600 dark:text-yellow-400">{{ ipaStats.media }}</p>
+                        <p class="text-3xl font-black text-yellow-600 dark:text-yellow-400">{{ ipacStats.media }}</p>
                         <p class="text-xs font-bold text-yellow-700 dark:text-yellow-500 uppercase tracking-wider mt-1">
                             🟡 Média</p>
                     </div>
                     <div
                         class="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-xl p-4 text-center">
-                        <p class="text-3xl font-black text-green-600 dark:text-green-400">{{ ipaStats.baixa }}</p>
+                        <p class="text-3xl font-black text-green-600 dark:text-green-400">{{ ipacStats.baixa }}</p>
                         <p class="text-xs font-bold text-green-700 dark:text-green-500 uppercase tracking-wider mt-1">🟢
                             Baixa</p>
                     </div>
                 </div>
                 <div class="bg-gray-900 dark:bg-gray-800 rounded-xl p-5 mb-6 text-white shadow-lg">
-                    <h3 class="text-lg font-bold">IPA = 0.4×H + 0.3×W + 0.3×P</h3>
-                    <p class="text-gray-400 text-xs mt-1">Normalização percentil | {{ setoresIPA.length }} setores</p>
+                    <h3 class="text-lg font-bold">IPAC = 0.4×H + 0.3×W + 0.3×P</h3>
+                    <p class="text-gray-400 text-xs mt-1">Normalização percentil | {{ setoresIPAC.length }} setores</p>
                     <div class="flex gap-6 mt-3 text-xs flex-wrap">
                         <span class="text-red-300">🌡️ H = 0.5×LST + 0.3×Imperm + 0.2×NDVI⁻¹</span>
                         <span class="text-blue-300">💧 W = 0.4×TWI + 0.3×Imperm + 0.3×Decliv</span>
@@ -101,14 +101,14 @@
                                     </th>
                                     <th
                                         class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
-                                        IPA</th>
+                                        IPAC</th>
                                     <th
                                         class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
                                         Cat.</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @for (setor of setoresIPA; track setor.id_ra; let i = $index) {
+                                @for (setor of setoresIPAC; track setor.id_ra; let i = $index) {
                                 <tr
                                     class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                                     <td class="px-4 py-2.5 text-gray-400 font-mono text-xs">{{ i + 1 }}</td>
@@ -126,19 +126,19 @@
                                     <td class="px-4 py-2.5">
                                         <div class="flex items-center gap-2">
                                             <span class="font-black text-gray-900 dark:text-gray-100 w-10 text-xs">{{
-                                                setor.ipa_score }}</span>
+                                                setor.ipac_score }}</span>
                                             <div
                                                 class="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 max-w-[100px]">
                                                 <div class="h-2 rounded-full"
-                                                    [style.width.%]="getScoreBarWidth(setor.ipa_score)"
-                                                    [style.background-color]="setor.ipa_cor"></div>
+                                                    [style.width.%]="getScoreBarWidth(setor.ipac_score)"
+                                                    [style.background-color]="setor.ipac_cor"></div>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="px-4 py-2.5"><span
                                             class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
-                                            [style.background-color]="setor.ipa_cor + '20'"
-                                            [style.color]="setor.ipa_cor">{{ setor.ipa_categoria }}</span></td>
+                                            [style.background-color]="setor.ipac_cor + '20'"
+                                            [style.color]="setor.ipac_cor">{{ setor.ipac_categoria }}</span></td>
                                 </tr>
                                 }
                             </tbody>
@@ -149,7 +149,7 @@
         </div>
 
         <!-- ===== SIMULATION TAB ===== -->
-        <div *ngIf="activeTab === 'simulation' && !ipaLoading" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div *ngIf="activeTab === 'simulation' && !ipacLoading" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
             <!-- LEFT COLUMN: Controls -->
             <div class="lg:col-span-4 bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-5">
@@ -163,8 +163,8 @@
                     <label class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 block">Região / Setor</label>
                     <select [(ngModel)]="selectedSetorIndex" (ngModelChange)="runSimulation()"
                         class="w-full px-3 py-1.5 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-xs font-bold text-gray-700 dark:text-gray-200">
-                        @for (setor of setoresIPA; track setor.id_ra; let i = $index) {
-                        <option [ngValue]="i">#{{ i+1 }} {{ setor.ra_nome }} (IPA: {{ setor.ipa_score }})</option>
+                        @for (setor of setoresIPAC; track setor.id_ra; let i = $index) {
+                        <option [ngValue]="i">#{{ i+1 }} {{ setor.ra_nome }} (IPAC: {{ setor.ipac_score }})</option>
                         }
                     </select>
                 </div>
@@ -351,8 +351,8 @@
                         </h4>
                         <div class="grid grid-cols-2 gap-x-2 gap-y-3 relative z-10">
                             <div>
-                                <p class="text-[8px] text-gray-400 font-bold uppercase mb-0.5">IPA Médio</p>
-                                <p class="text-sm font-black">{{ ipaStats.avgScore }}</p>
+                                <p class="text-[8px] text-gray-400 font-bold uppercase mb-0.5">IPAC Médio</p>
+                                <p class="text-sm font-black">{{ ipacStats.avgScore }}</p>
                             </div>
                             <div>
                                 <p class="text-[8px] text-gray-400 font-bold uppercase mb-0.5">Impacto LST Estim.</p>

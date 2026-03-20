@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import * as L from 'leaflet';
 import { MockDataService, CityInfo, TimelinePoint } from '../services/mock-data.service';
-import { IpaService, SetorIPA } from '../services/ipa.service';
+import { IpacService, SetorIPAC } from '../services/ipac.service';
 import { SimulationService, SimulationResult, SensitivityResult, Cenario } from '../services/simulation.service';
 
 @Component({
@@ -17,7 +17,7 @@ import { SimulationService, SimulationResult, SensitivityResult, Cenario } from 
 export class AnalyticsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   dataService = inject(MockDataService);
-  ipaService = inject(IpaService);
+  ipacService = inject(IpacService);
   simService = inject(SimulationService);
 
 
@@ -36,15 +36,15 @@ export class AnalyticsComponent implements OnInit {
   timeline: TimelinePoint[] = [];
   timelineMax = 45;
 
-  // IPA
-  setoresIPA: SetorIPA[] = [];
-  ipaLoading = true;
-  ipaStats = { muitoAlta: 0, alta: 0, media: 0, baixa: 0, avgScore: 0, maxScore: 0, principalDriver: '' };
+  // IPAC
+  setoresIPAC: SetorIPAC[] = [];
+  ipacLoading = true;
+  ipacStats = { muitoAlta: 0, alta: 0, media: 0, baixa: 0, avgScore: 0, maxScore: 0, principalDriver: '' };
 
   // Tabs
-  activeTab: 'ipa' | 'simulation' | 'sensitivity' | 'indicators' = 'ipa';
+  activeTab: 'ipac' | 'simulation' | 'sensitivity' | 'indicators' = 'ipac';
 
-  setTab(tab: 'ipa' | 'simulation' | 'sensitivity' | 'indicators') {
+  setTab(tab: 'ipac' | 'simulation' | 'sensitivity' | 'indicators') {
     this.activeTab = tab;
     if (tab === 'simulation') {
       setTimeout(() => this.initMap(), 100);
@@ -128,7 +128,13 @@ export class AnalyticsComponent implements OnInit {
     if (this.mainMarker) {
       this.mainMarker.setLatLng([this.center.lat, this.center.lng]);
     } else {
-      this.mainMarker = L.marker([this.center.lat, this.center.lng]).addTo(this.map);
+      const cityIcon = L.divIcon({
+        className: 'custom-city-icon',
+        html: `<div style="background-color: #16a34a; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+      });
+      this.mainMarker = L.marker([this.center.lat, this.center.lng], { icon: cityIcon }).addTo(this.map);
     }
     this.mainMarker.bindPopup(`<b>${this.selectedCityName}</b>`).openPopup();
   }
@@ -172,7 +178,7 @@ export class AnalyticsComponent implements OnInit {
       this.map.setView([this.center.lat, this.center.lng], this.zoom);
       this.updateMainMarker();
     }
-    this.loadIPA(city.name, '');
+    this.loadIPAC(city.name, '');
     this.fetchByCoords(city.lat, city.lng);
   }
 
@@ -190,7 +196,13 @@ export class AnalyticsComponent implements OnInit {
       if (this.selectedPinMarker) {
         this.selectedPinMarker.setLatLng([lat, lng]);
       } else {
-        this.selectedPinMarker = L.marker([lat, lng]).addTo(this.map);
+        const pinIcon = L.divIcon({
+          className: 'custom-pin-icon',
+          html: `<div style="background-color: #2563eb; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.4);"></div>`,
+          iconSize: [16, 16],
+          iconAnchor: [8, 8]
+        });
+        this.selectedPinMarker = L.marker([lat, lng], { icon: pinIcon }).addTo(this.map);
       }
     }
   }
@@ -204,11 +216,11 @@ export class AnalyticsComponent implements OnInit {
     }
   }
 
-  loadIPA(cityName: string, state: string) {
-    this.ipaLoading = true;
-    this.ipaService.getSetoresIPA(cityName, state).subscribe(data => {
-      this.setoresIPA = data;
-      this.ipaLoading = false;
+  loadIPAC(cityName: string, state: string) {
+    this.ipacLoading = true;
+    this.ipacService.getSetoresIPAC(cityName, state).subscribe(data => {
+      this.setoresIPAC = data;
+      this.ipacLoading = false;
 
       const avgH = data.reduce((sum, s) => sum + s.modulo_h, 0) / data.length;
       const avgW = data.reduce((sum, s) => sum + s.modulo_w, 0) / data.length;
@@ -219,13 +231,13 @@ export class AnalyticsComponent implements OnInit {
       if (avgW > maxAvg) { principalDriver = 'Desastres Rel. Água (W)'; maxAvg = avgW; }
       if (avgP > maxAvg) { principalDriver = 'Vulnerabilidade Social (P)'; }
 
-      this.ipaStats = {
-        muitoAlta: data.filter(s => s.ipa_categoria === 'Muito Alta').length,
-        alta: data.filter(s => s.ipa_categoria === 'Alta').length,
-        media: data.filter(s => s.ipa_categoria === 'Média').length,
-        baixa: data.filter(s => s.ipa_categoria === 'Baixa').length,
-        avgScore: +(data.reduce((sum, s) => sum + s.ipa_score, 0) / data.length).toFixed(1),
-        maxScore: Math.max(...data.map(s => s.ipa_score)),
+      this.ipacStats = {
+        muitoAlta: data.filter(s => s.ipac_categoria === 'Muito Alta').length,
+        alta: data.filter(s => s.ipac_categoria === 'Alta').length,
+        media: data.filter(s => s.ipac_categoria === 'Média').length,
+        baixa: data.filter(s => s.ipac_categoria === 'Baixa').length,
+        avgScore: +(data.reduce((sum, s) => sum + s.ipac_score, 0) / data.length).toFixed(1),
+        maxScore: Math.max(...data.map(s => s.ipac_score)),
         principalDriver: principalDriver
       } as any;
       
@@ -249,16 +261,16 @@ export class AnalyticsComponent implements OnInit {
 
   // Simulation
   runSimulation() {
-    if (this.setoresIPA.length === 0) return;
-    const setor = this.setoresIPA[this.selectedSetorIndex];
+    if (this.setoresIPAC.length === 0) return;
+    const setor = this.setoresIPAC[this.selectedSetorIndex];
     if (this.investimentoSimulacao && this.investimentoSimulacao > 0) {
       this.simInput = this.simService.calcularIntervencoesPorInvestimento(this.investimentoSimulacao);
     }
     this.simResult = this.simService.simulateThermal(setor, this.simInput, this.cenario);
   }
 
-  getSelectedSetor(): SetorIPA | null {
-    return this.setoresIPA[this.selectedSetorIndex] || null;
+  getSelectedSetor(): SetorIPAC | null {
+    return this.setoresIPAC[this.selectedSetorIndex] || null;
   }
 
   // Helpers

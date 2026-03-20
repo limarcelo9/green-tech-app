@@ -15,7 +15,7 @@ export interface RAraw {
     percentual_idosos: number;
 }
 
-export interface SetorIPA extends RAraw {
+export interface SetorIPAC extends RAraw {
     lst_norm: number;
     ndvi_inv_norm: number;
     imperm_norm: number;
@@ -27,30 +27,30 @@ export interface SetorIPA extends RAraw {
     modulo_h: number;
     modulo_w: number;
     modulo_p: number;
-    ipa_score: number;
-    ipa_categoria: string;
-    ipa_cor: string;
+    ipac_score: number;
+    ipac_categoria: string;
+    ipac_cor: string;
     ra_nome: string;
 }
 
 @Injectable({ providedIn: 'root' })
-export class IpaService {
+export class IpacService {
     private http = inject(HttpClient);
-    private cache$: Record<string, Observable<SetorIPA[]>> = {};
+    private cache$: Record<string, Observable<SetorIPAC[]>> = {};
 
-    getSetoresIPA(cityName: string = "Plano Piloto", state: string = "DF"): Observable<SetorIPA[]> {
+    getSetoresIPAC(cityName: string = "Plano Piloto", state: string = "DF"): Observable<SetorIPAC[]> {
         const cacheKey = `${cityName}-${state}`;
         if (!this.cache$[cacheKey]) {
             if (cityName === 'Plano Piloto' && state === 'DF') {
                 this.cache$[cacheKey] = this.http.get('assets/data/indicadores_base_DF.csv', { responseType: 'text' })
                     .pipe(
                         map(csv => this.parseCSV(csv)),
-                        map(rows => this.calculateIPA(rows)),
+                        map(rows => this.calculateIPAC(rows)),
                         shareReplay(1)
                     );
             } else {
                 this.cache$[cacheKey] = of(this.generateMockSetores(cityName)).pipe(
-                    map(rows => this.calculateIPA(rows)),
+                    map(rows => this.calculateIPAC(rows)),
                     shareReplay(1)
                 );
             }
@@ -125,7 +125,7 @@ export class IpaService {
         });
     }
 
-    private calculateIPA(rows: RAraw[]): SetorIPA[] {
+    private calculateIPAC(rows: RAraw[]): SetorIPAC[] {
         const lst_norm = this.normalizePercentile(rows.map(r => r.lst_p90));
         const ndvi_inv_norm = this.normalizePercentile(rows.map(r => -r.ndvi_medio));
         const imperm_norm = this.normalizePercentile(rows.map(r => r.impermeabilizacao_pct));
@@ -139,13 +139,13 @@ export class IpaService {
             const modulo_h = (0.5 * lst_norm[i]) + (0.3 * imperm_norm[i]) + (0.2 * ndvi_inv_norm[i]);
             const modulo_w = (0.4 * twi_norm[i]) + (0.3 * imperm_norm[i]) + (0.3 * decliv_norm[i]);
             const modulo_p = (0.4 * densidade_norm[i]) + (0.4 * renda_inv_norm[i]) + (0.2 * idosos_norm[i]);
-            const ipa_score = (0.4 * modulo_h) + (0.3 * modulo_w) + (0.3 * modulo_p);
+            const ipac_score = (0.4 * modulo_h) + (0.3 * modulo_w) + (0.3 * modulo_p);
 
-            let ipa_categoria: string, ipa_cor: string;
-            if (ipa_score >= 80) { ipa_categoria = 'Muito Alta'; ipa_cor = '#dc2626'; }
-            else if (ipa_score >= 60) { ipa_categoria = 'Alta'; ipa_cor = '#ea580c'; }
-            else if (ipa_score >= 40) { ipa_categoria = 'Média'; ipa_cor = '#eab308'; }
-            else { ipa_categoria = 'Baixa'; ipa_cor = '#16a34a'; }
+            let ipac_categoria: string, ipac_cor: string;
+            if (ipac_score >= 80) { ipac_categoria = 'Muito Alta'; ipac_cor = '#dc2626'; }
+            else if (ipac_score >= 60) { ipac_categoria = 'Alta'; ipac_cor = '#ea580c'; }
+            else if (ipac_score >= 40) { ipac_categoria = 'Média'; ipac_cor = '#eab308'; }
+            else { ipac_categoria = 'Baixa'; ipac_cor = '#16a34a'; }
 
             return {
                 ...row,
@@ -160,12 +160,12 @@ export class IpaService {
                 modulo_h: +modulo_h.toFixed(1),
                 modulo_w: +modulo_w.toFixed(1),
                 modulo_p: +modulo_p.toFixed(1),
-                ipa_score: +ipa_score.toFixed(1),
-                ipa_categoria,
-                ipa_cor,
+                ipac_score: +ipac_score.toFixed(1),
+                ipac_categoria,
+                ipac_cor,
                 ra_nome: row.nome_ra,
             };
-        }).sort((a, b) => b.ipa_score - a.ipa_score);
+        }).sort((a, b) => b.ipac_score - a.ipac_score);
     }
 
     private normalizePercentile(values: number[]): number[] {

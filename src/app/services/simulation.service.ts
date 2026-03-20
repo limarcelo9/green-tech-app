@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { SetorIPA } from './ipa.service';
+import { SetorIPAC } from './ipac.service';
 
 export interface SimulationInput {
     // Soluções baseadas na natureza
@@ -112,7 +112,7 @@ export class SimulationService {
     private readonly cnImpervious = 98;
     private readonly cnGreenArea = 61;
 
-    simulateThermal(setor: SetorIPA, input: SimulationInput, cenario: Cenario): SimulationResult {
+    simulateThermal(setor: SetorIPAC, input: SimulationInput, cenario: Cenario): SimulationResult {
         // === THERMAL ===
         const deltaArvores = -(input.aumentoCoberturaArborea * this.treeCanopyEffect[cenario]);
         const deltaImperm = -(input.reducaoImpermeabilizacao * this.impermLSTEffect[cenario]);
@@ -174,7 +174,7 @@ export class SimulationService {
     }
 
     // === SENSITIVITY ===
-    runSensitivityAnalysis(setores: SetorIPA[]): SensitivityResult[] {
+    runSensitivityAnalysis(setores: SetorIPAC[]): SensitivityResult[] {
         const scenarios = [
             { label: 'Base (0.4 / 0.3 / 0.3)', h: 0.4, w: 0.3, p: 0.3 },
             { label: 'Calor +20% (0.48 / 0.26 / 0.26)', h: 0.48, w: 0.26, p: 0.26 },
