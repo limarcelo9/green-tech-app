@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { GoogleMap, MapMarker } from '@angular/google-maps';
 import { MockDataService, CityInfo, TimelinePoint } from '../services/mock-data.service';
 import { IpaService, SetorIPA } from '../services/ipa.service';
 import { SimulationService, SimulationResult, SensitivityResult, Cenario } from '../services/simulation.service';
@@ -9,7 +10,7 @@ import { SimulationService, SimulationResult, SensitivityResult, Cenario } from 
 @Component({
   selector: 'app-analytics',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, GoogleMap, MapMarker],
   templateUrl: './analytics.component.html',
   styleUrl: './analytics.component.css'
 })
@@ -76,6 +77,17 @@ export class AnalyticsComponent implements OnInit {
   // Sensitivity
   sensitivityResults: SensitivityResult[] = [];
 
+  // Map Integration
+  center: google.maps.LatLngLiteral = { lat: -15.7938, lng: -47.8827 };
+  zoom = 10;
+  mapOptions: google.maps.MapOptions = {
+    disableDefaultUI: false, zoomControl: true, mapId: 'DEMO_MAP_ID',
+    tilt: 45, heading: 90, rotateControl: true, mapTypeId: 'hybrid'
+  };
+  selectedPin: google.maps.LatLngLiteral | null = null;
+  pinLoading = false;
+  pinIndicators = { temperature: '--', floodRisk: '--', elevation: '--' };
+
   ngOnInit() {
     this.route.queryParams.subscribe(qp => {
       const lat = parseFloat(qp['lat']);
@@ -108,8 +120,31 @@ export class AnalyticsComponent implements OnInit {
     this.isCustomLocation = false;
     this.locationInfo = { name: city.name, info: `Análise territorial para ${city.name}.` };
     this.isLoading = true;
+    this.center = { lat: city.lat, lng: city.lng };
+    this.zoom = 12;
+    this.clearPin();
     this.loadIPA(city.name, '');
     this.fetchByCoords(city.lat, city.lng);
+  }
+
+  // Map Events
+  onMapClick(event: google.maps.MapMouseEvent) {
+    if (!event.latLng) return;
+    const lat = event.latLng.lat();
+    const lng = event.latLng.lng();
+
+    this.selectedPin = { lat, lng };
+    this.pinLoading = true;
+    this.pinIndicators = { temperature: '...', floodRisk: '...', elevation: '...' };
+
+    this.dataService.getTemperatureByCoords(lat, lng).subscribe(val => { this.pinIndicators.temperature = val; });
+    this.dataService.getFloodRiskByCoords(lat, lng).subscribe(val => { this.pinIndicators.floodRisk = val; });
+    this.dataService.getElevationByCoords(lat, lng).subscribe(val => { this.pinIndicators.elevation = val; this.pinLoading = false; });
+  }
+
+  clearPin() {
+    this.selectedPin = null;
+    this.pinLoading = false;
   }
 
   loadIPA(cityName: string, state: string) {
