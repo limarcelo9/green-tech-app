@@ -39,7 +39,7 @@ export class AnalyticsComponent implements OnInit {
   // IPA
   setoresIPA: SetorIPA[] = [];
   ipaLoading = true;
-  ipaStats = { muitoAlta: 0, alta: 0, media: 0, baixa: 0, avgScore: 0, maxScore: 0 };
+  ipaStats = { muitoAlta: 0, alta: 0, media: 0, baixa: 0, avgScore: 0, maxScore: 0, principalDriver: '' };
 
   // Tabs
   activeTab: 'ipa' | 'simulation' | 'sensitivity' | 'indicators' = 'ipa';
@@ -105,6 +105,16 @@ export class AnalyticsComponent implements OnInit {
     this.ipaService.getSetoresIPA(cityName, state).subscribe(data => {
       this.setoresIPA = data;
       this.ipaLoading = false;
+
+      const avgH = data.reduce((sum, s) => sum + s.modulo_h, 0) / data.length;
+      const avgW = data.reduce((sum, s) => sum + s.modulo_w, 0) / data.length;
+      const avgP = data.reduce((sum, s) => sum + s.modulo_p, 0) / data.length;
+      
+      let principalDriver = 'Calor (H)';
+      let maxAvg = avgH;
+      if (avgW > maxAvg) { principalDriver = 'Desastres Rel. Água (W)'; maxAvg = avgW; }
+      if (avgP > maxAvg) { principalDriver = 'Vulnerabilidade Social (P)'; }
+
       this.ipaStats = {
         muitoAlta: data.filter(s => s.ipa_categoria === 'Muito Alta').length,
         alta: data.filter(s => s.ipa_categoria === 'Alta').length,
@@ -112,7 +122,8 @@ export class AnalyticsComponent implements OnInit {
         baixa: data.filter(s => s.ipa_categoria === 'Baixa').length,
         avgScore: +(data.reduce((sum, s) => sum + s.ipa_score, 0) / data.length).toFixed(1),
         maxScore: Math.max(...data.map(s => s.ipa_score)),
-      };
+        principalDriver: principalDriver
+      } as any;
       
       this.selectedSetorIndex = 0;
       this.runSimulation();

@@ -62,16 +62,43 @@ export class IpaService {
         const setores: RAraw[] = [];
         const bairrosMock = ["Centro", "Zona Norte", "Zona Sul", "Zona Leste", "Zona Oeste", "Distrito Industrial", "Jardim Central", "Vila Nova"];
         
+        let baseLst = 30; let maxLst = 10;
+        let baseImperm = 20; let maxImperm = 70;
+        let baseDecliv = 1; let maxDecliv = 15;
+        let baseTwi = 5; let maxTwi = 10;
+        let baseDens = 10; let maxDens = 150;
+
+        const cityLower = cityName.toLowerCase();
+        
+        if (cityLower.includes('recife')) {
+            baseTwi = 12; maxTwi = 8;
+            baseDecliv = 0; maxDecliv = 5;
+            baseImperm = 50; maxImperm = 40;
+        } else if (cityLower.includes('petrópolis') || cityLower.includes('petropolis')) {
+            baseDecliv = 15; maxDecliv = 30;
+            baseTwi = 8; maxTwi = 10;
+        } else if (cityLower.includes('belo horizonte')) {
+            baseDecliv = 10; maxDecliv = 20;
+            baseDens = 50; maxDens = 200;
+        } else if (cityLower.includes('são paulo') || cityLower.includes('sao paulo')) {
+            baseImperm = 60; maxImperm = 40;
+            baseDens = 80; maxDens = 300;
+            baseLst = 35; maxLst = 15;
+        } else if (cityLower.includes('porto alegre')) {
+            baseLst = 32; maxLst = 12;
+            baseImperm = 40; maxImperm = 50;
+        }
+
         for (let i = 0; i < bairrosMock.length; i++) {
             setores.push({
                 id_ra: `${cityName.replace(/\s+/g, '-').toLowerCase()}-${i}`,
                 nome_ra: `${bairrosMock[i]}`,
-                lst_p90: +(30 + Math.random() * 10).toFixed(1),
+                lst_p90: +(baseLst + Math.random() * maxLst).toFixed(1),
                 ndvi_medio: +(0.1 + Math.random() * 0.5).toFixed(2),
-                impermeabilizacao_pct: +(20 + Math.random() * 70).toFixed(1),
-                declividade_media: +(1 + Math.random() * 15).toFixed(1),
-                twi: +(5 + Math.random() * 10).toFixed(1),
-                densidade_pop: +(10 + Math.random() * 150).toFixed(1),
+                impermeabilizacao_pct: +(baseImperm + Math.random() * maxImperm).toFixed(1),
+                declividade_media: +(baseDecliv + Math.random() * maxDecliv).toFixed(1),
+                twi: +(baseTwi + Math.random() * maxTwi).toFixed(1),
+                densidade_pop: +(baseDens + Math.random() * maxDens).toFixed(1),
                 renda_media: +(1000 + Math.random() * 9000).toFixed(2),
                 percentual_idosos: +(5 + Math.random() * 20).toFixed(1)
             });

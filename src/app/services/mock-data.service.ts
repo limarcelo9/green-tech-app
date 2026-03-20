@@ -89,7 +89,7 @@ export class MockDataService {
     'PR': [{ name: 'Curitiba', lat: -25.4284, lng: -49.2733 }, { name: 'Londrina', lat: -23.3045, lng: -51.1696 }, { name: 'Maringá', lat: -23.4205, lng: -51.9333 }],
     'PE': [{ name: 'Recife', lat: -8.0476, lng: -34.8770 }, { name: 'Jaboatão', lat: -8.1130, lng: -35.0152 }, { name: 'Caruaru', lat: -8.2833, lng: -35.9761 }],
     'PI': [{ name: 'Teresina', lat: -5.0892, lng: -42.8019 }, { name: 'Parnaíba', lat: -2.9055, lng: -41.7769 }],
-    'RJ': [{ name: 'Rio de Janeiro', lat: -22.9068, lng: -43.1729 }, { name: 'Niterói', lat: -22.8833, lng: -43.1036 }, { name: 'Nova Iguaçu', lat: -22.7556, lng: -43.4603 }],
+    'RJ': [{ name: 'Rio de Janeiro', lat: -22.9068, lng: -43.1729 }, { name: 'Niterói', lat: -22.8833, lng: -43.1036 }, { name: 'Nova Iguaçu', lat: -22.7556, lng: -43.4603 }, { name: 'Petrópolis', lat: -22.5050, lng: -43.1786 }],
     'RN': [{ name: 'Natal', lat: -5.7945, lng: -35.2110 }, { name: 'Mossoró', lat: -5.1878, lng: -37.3442 }],
     'RS': [{ name: 'Porto Alegre', lat: -30.0346, lng: -51.2177 }, { name: 'Caxias do Sul', lat: -29.1681, lng: -51.1794 }, { name: 'Pelotas', lat: -31.7654, lng: -52.3376 }],
     'RO': [{ name: 'Porto Velho', lat: -8.7612, lng: -63.9004 }, { name: 'Ji-Paraná', lat: -10.8853, lng: -61.9514 }],
