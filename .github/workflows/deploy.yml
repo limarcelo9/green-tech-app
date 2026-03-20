@@ -28,7 +28,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Install dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps
       - name: Build with Angular CLI
         run: npm run build -- --base-href /green-tech-app/
       - name: Upload artifact
