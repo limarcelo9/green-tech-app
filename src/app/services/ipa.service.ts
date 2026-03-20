@@ -60,7 +60,7 @@ export class IpaService {
 
     private generateMockSetores(cityName: string): RAraw[] {
         const setores: RAraw[] = [];
-        const bairrosMock = ["Centro", "Zona Norte", "Zona Sul", "Zona Leste", "Zona Oeste", "Distrito Industrial", "Jardim Central", "Vila Nova"];
+        let bairrosMock = ["Centro", "Zona Norte", "Zona Sul", "Zona Leste", "Zona Oeste", "Distrito Industrial", "Jardim Central", "Vila Nova"];
         
         let baseLst = 30; let maxLst = 10;
         let baseImperm = 20; let maxImperm = 70;
@@ -71,20 +71,25 @@ export class IpaService {
         const cityLower = cityName.toLowerCase();
         
         if (cityLower.includes('recife')) {
+            bairrosMock = ['Boa Viagem', 'Santo Amaro', 'Várzea', 'Pina', 'Ibura', 'Caxangá', 'Casa Amarela', 'Boa Vista'];
             baseTwi = 12; maxTwi = 8;
             baseDecliv = 0; maxDecliv = 5;
             baseImperm = 50; maxImperm = 40;
         } else if (cityLower.includes('petrópolis') || cityLower.includes('petropolis')) {
+            bairrosMock = ['Centro', 'Quitandinha', 'Itaipava', 'Bingen', 'Alto da Serra', 'Corrêas', 'Nogueira', 'Cascatinha'];
             baseDecliv = 15; maxDecliv = 30;
             baseTwi = 8; maxTwi = 10;
         } else if (cityLower.includes('belo horizonte')) {
+            bairrosMock = ['Pampulha', 'Venda Nova', 'Barreiro', 'Centro-Sul', 'Noroeste', 'Leste', 'Oeste', 'Norte'];
             baseDecliv = 10; maxDecliv = 20;
             baseDens = 50; maxDens = 200;
         } else if (cityLower.includes('são paulo') || cityLower.includes('sao paulo')) {
+            bairrosMock = ['Subprefeitura Sé', 'Subprefeitura Pinheiros', 'Subprefeitura Itaquera', 'Subprefeitura Lapa', 'Subprefeitura Santo Amaro', 'Subprefeitura Mooca', 'Subprefeitura Vila Mariana', 'Subprefeitura Guaianases'];
             baseImperm = 60; maxImperm = 40;
             baseDens = 80; maxDens = 300;
             baseLst = 35; maxLst = 15;
         } else if (cityLower.includes('porto alegre')) {
+            bairrosMock = ['Centro Histórico', 'Restinga', 'Sarandi', 'Cidade Baixa', 'Moinhos de Vento', 'Lomba do Pinheiro', 'Rubem Berta', 'Partenon'];
             baseLst = 32; maxLst = 12;
             baseImperm = 40; maxImperm = 50;
         }
