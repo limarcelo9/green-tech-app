@@ -1,27 +1,57 @@
-# GreenTechApp
+# 🌳 Green-Tech DF: Priorização de Adaptação Climática
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.2.21.
+Uma plataforma analítica avançada para suporte à tomada de decisão legislativa e executiva, focada na resiliência urbana do Distrito Federal e grandes metrópoles brasileiras.
 
-## Development server
+O projeto utiliza o **IPAC (Índice de Priorização de Adaptação Climática)** para identificar e simular intervenções baseadas na natureza (WRI Brasil, 2025).
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+---
 
-## Code scaffolding
+## 🚀 Funcionalidades Principais
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+*   **🏆 Ranking IPAC:** Classificação das 35 Regiões Administrativas do DF por criticidade climática.
+*   **🌡️ Módulo de Calor (H):** Análise de temperatura de superfície e ilhas de calor via satélite.
+*   **💧 Módulo Hídrico (W):** Monitoramento de risco de alagamentos e escoamento superficial.
+*   **👥 Módulo Social (P):** Mapeamento de vulnerabilidade socioeconômica e demográfica.
+*   **🧠 Smart Allocator (A.I.):** Simulador de intervenções que calcula o impacto de arborização, telhados verdes e pavimentos frios no microclima urbano.
 
-## Build
+---
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+## 📊 Fontes de Dados e APIs
 
-## Running unit tests
+A plataforma consome dados em tempo real e bases históricas de alta resolução:
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+| Recurso | Fonte / API | Descritivo |
+| :--- | :--- | :--- |
+| **Clima (Temp/Chuva)** | [Open-Meteo](https://open-meteo.com/) | Previsões e histórico (GFS/ECMWF). |
+| **Relevo (Altitude)** | [Open-Elevation](https://open-elevation.com/) | Modelagem digital de elevação (SRTM/NASA). |
+| **Calor (Satélite)** | Landsat 8/9 & Copernicus | Captura da Temperatura da Superfície Terrestre (LST). |
+| **Social / Renda** | IBGE & IPEDF (Codeplan) | Dados demográficos e socioeconômicos consolidados. |
+| **Metodologia SBN** | [WRI Brasil](https://www.wribrasil.org.br/) | Parâmetros de intervenção baseados na natureza. |
+| **Mapa Interativo** | Leaflet + CartoDB | Interface geoespacial de alta performance. |
 
-## Running end-to-end tests
+---
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+## 🛠️ Tecnologias Utilizadas
 
-## Further help
+*   **Framework:** Angular 18 (Standalone Components)
+*   **Estilização:** Tailwind CSS & Vanilla CSS (Premium Aesthetics)
+*   **Cartografia:** Leaflet.js
+*   **Visualização:** Chart.js & NG2-Charts
+*   **Deploy:** GitHub Pages (`angular-cli-ghpages`)
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+---
+
+## 💻 Desenvolvimento
+
+Para rodar o projeto localmente:
+
+1.  Instale as dependências: `npm install`
+2.  Inicie o servidor: `npm start`
+3.  Acesse: `http://localhost:4200/`
+
+Para deploy no GitHub Pages:
+`ng deploy --base-href=/green-tech-app/`
+
+---
+
+**Desenvolvido por [limarcelo9](https://github.com/limarcelo9)**
