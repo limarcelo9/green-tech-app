@@ -43,6 +43,22 @@ export class IpacService {
     private mockData = inject(MockDataService);
     private cache$: Record<string, Observable<SetorIPAC[]>> = {};
 
+    private readonly EXPECTED_UNITS: Record<string, number> = {
+        "Brasília": 35,
+        "São Paulo": 32,
+        "Rio de Janeiro": 34,
+        "Belo Horizonte": 9,
+        "Curitiba": 10,
+        "Porto Alegre": 17,
+        "Recife": 15,
+        "Paranaguá": 10,
+        "Ubatuba": 11,
+        "Petrópolis": 8
+    };
+
+    public integrityLog: string[] = [];
+    public isDataConsistent = true;
+
     private coordsDF: Record<string, { lat: number, lng: number }> = {
         "Plano Piloto": { lat: -15.7938, lng: -47.8827 },
         "Gama": { lat: -16.0232, lng: -48.0645 },
@@ -130,6 +146,7 @@ export class IpacService {
                                 const flattened = results.reduce((acc, val) => acc.concat(val), []);
                                 try {
                                     observer.next(this.calculateIPAC(flattened));
+                                    this.validateDataIntegrity(flattened);
                                     observer.complete();
                                 } catch (e) {
                                     observer.error(e);
@@ -146,7 +163,7 @@ export class IpacService {
 
     private generateMockSetores(cityName: string): RAraw[] {
         const setores: RAraw[] = [];
-        let bairrosMock = ["Centro", "Zona Norte", "Zona Sul", "Zona Leste", "Zona Oeste", "Distrito Industrial", "Jardim Central", "Vila Nova"];
+        let bairrosMock: string[] = [];
         
         let baseLst = 30; let maxLst = 10;
         let baseImperm = 20; let maxImperm = 70;
@@ -157,47 +174,32 @@ export class IpacService {
         const cityLower = cityName.toLowerCase();
         
         if (cityLower.includes("recife")) {
-            bairrosMock = ["Boa Viagem", "Santo Amaro", "Várzea", "Pina", "Ibura", "Caxangá", "Casa Amarela", "Boa Vista"];
-            baseTwi = 12; maxTwi = 8;
-            baseDecliv = 0; maxDecliv = 5;
-            baseImperm = 50; maxImperm = 40;
+            bairrosMock = ["Boa Viagem", "Santo Amaro", "Várzea", "Pina", "Ibura", "Caxangá", "Casa Amarela", "Boa Vista", "Afogados", "Espinheiro", "Graças", "Jardim São Paulo", "Madalena", "Torre", "Mustardinha"];
+            baseTwi = 12; maxTwi = 8; baseDecliv = 0; maxDecliv = 5; baseImperm = 50; maxImperm = 40;
         } else if (cityLower.includes("petrópolis") || cityLower.includes("petropolis")) {
             bairrosMock = ["Centro", "Quitandinha", "Itaipava", "Bingen", "Alto da Serra", "Corrêas", "Nogueira", "Cascatinha"];
-            baseDecliv = 15; maxDecliv = 30;
-            baseTwi = 8; maxTwi = 10;
+            baseDecliv = 15; maxDecliv = 30; baseTwi = 8; maxTwi = 10;
         } else if (cityLower.includes("belo horizonte")) {
-            bairrosMock = ["Pampulha", "Venda Nova", "Barreiro", "Centro-Sul", "Noroeste", "Leste", "Oeste", "Norte"];
-            baseDecliv = 10; maxDecliv = 20;
-            baseDens = 50; maxDens = 200;
+            bairrosMock = ["Barreiro", "Centro-Sul", "Leste", "Nordeste", "Noroeste", "Norte", "Oeste", "Pampulha", "Venda Nova"];
+            baseDecliv = 10; maxDecliv = 20; baseDens = 50; maxDens = 200;
         } else if (cityLower.includes("são paulo") || cityLower.includes("sao paulo")) {
-            bairrosMock = ["Subprefeitura Sé", "Subprefeitura Pinheiros", "Subprefeitura Itaquera", "Subprefeitura Lapa", "Subprefeitura Santo Amaro", "Subprefeitura Mooca", "Subprefeitura Vila Mariana", "Subprefeitura Guaianases"];
-            baseImperm = 60; maxImperm = 40;
-            baseDens = 80; maxDens = 300;
-            baseLst = 35; maxLst = 15;
+            bairrosMock = ["Aricanduva", "Butantã", "Campo Limpo", "Capela do Socorro", "Casa Verde", "Cidade Ademar", "Cidade Tiradentes", "Ermelino Matarazzo", "Freguesia do Ó", "Guaianases", "Ipiranga", "Itaim Paulista", "Itaquera", "Jabaquara", "Jaçanã", "Lapa", "M'Boi Mirim", "Mooca", "Parelheiros", "Penha", "Perus", "Pinheiros", "Pirituba", "Santana", "Santo Amaro", "São Mateus", "São Miguel", "Sapopemba", "Sé", "Vila Maria", "Vila Mariana", "Vila Prudente"];
+            baseImperm = 60; maxImperm = 40; baseDens = 80; maxDens = 300; baseLst = 35; maxLst = 15;
         } else if (cityLower.includes("porto alegre")) {
-            bairrosMock = ["Centro Histórico", "Restinga", "Sarandi", "Cidade Baixa", "Moinhos de Vento", "Lomba do Pinheiro", "Rubem Berta", "Partenon"];
-            baseLst = 32; maxLst = 12;
-            baseImperm = 40; maxImperm = 50;
+            bairrosMock = ["Centro Histórico", "Eixo Baltazar", "Humaitá-Navegantes", "Leste", "Lomba do Pinheiro", "Noroeste", "Norte", "Partenon", "Restinga", "Sul", "Centro-Sul", "Cristal", "Glória", "Ilhas", "Petrópolis", "Região 17", "Extremo-Sul"];
+            baseLst = 32; maxLst = 12; baseImperm = 40; maxImperm = 50;
         } else if (cityLower.includes("rio de janeiro")) {
-            bairrosMock = ["Copacabana", "Ipanema", "Tijuca", "Barra da Tijuca", "Madureira", "Campo Grande", "Santa Teresa", "Recreio"];
-            baseLst = 34; maxLst = 12;
-            baseImperm = 55; maxImperm = 35;
-            baseDens = 100; maxDens = 350;
+            bairrosMock = ["Centro", "Portuária", "São Cristóvão", "Rio Comprido", "Botafogo", "Copacabana", "Lagoa", "Tijuca", "Vila Isabel", "Ramos", "Penha", "Vigário Geral", "Ilha do Governador", "Méier", "Irajá", "Madureira", "Jacarepaguá", "Bangu", "Campo Grande", "Santa Cruz", "Guaratiba", "Paquetá", "Pavuna", "Barra da Tijuca", "Jacarezinho", "Complexo do Alemão", "Maré", "Vigário Geral", "Realengo", "Rocinha", "Jacarezinho", "Vidigal", "Santa Teresa", "Gardenia Azul"];
+            baseLst = 34; maxLst = 12; baseImperm = 55; maxImperm = 35; baseDens = 100; maxDens = 350;
         } else if (cityLower.includes("curitiba")) {
-            bairrosMock = ["Batel", "Água Verde", "Santa Felicidade", "Boqueirão", "CIC", "Centro Cívico", "Portão", "Cajuru"];
-            baseLst = 24; maxLst = 8;
-            baseDecliv = 3; maxDecliv = 10;
-            baseDens = 40; maxDens = 150;
+            bairrosMock = ["Matriz", "Santa Felicidade", "Boa Vista", "Cajuru", "Portão", "Boqueirão", "Pinheirinho", "Bairro Novo", "Tatuquara", "CIC", "Parolin", "Caximba"];
+            baseLst = 24; maxLst = 8; baseDecliv = 3; maxDecliv = 10; baseDens = 40; maxDens = 150;
         } else if (cityLower.includes("ubatuba")) {
-            bairrosMock = ["Centro", "Itaguá", "Perequê-Açu", "Enseada", "Lázaro", "Praia Grande", "Tenório", "Félix"];
-            baseLst = 28; maxLst = 10;
-            baseImperm = 15; maxImperm = 30;
-            baseTwi = 14; maxTwi = 5;
+            bairrosMock = ["Centro", "Itaguá", "Perequê-Açu", "Enseada", "Lázaro", "Praia Grande", "Tenório", "Félix", "Estufa II", "Ipiranguinha", "Sesmaria"];
+            baseLst = 28; maxLst = 10; baseImperm = 15; maxImperm = 30; baseTwi = 14; maxTwi = 5;
         } else if (cityLower.includes("paranaguá") || cityLower.includes("paranagua")) {
-            bairrosMock = ["Centro Histórico", "Estradinha", "Labra", "Oceania", "Vila Itiberê", "Palmital", "Rocio", "Jardim Iguaçu"];
-            baseLst = 29; maxLst = 10;
-            baseTwi = 15; maxTwi = 7;
-            baseImperm = 30; maxImperm = 40;
+            bairrosMock = ["Centro Histórico", "Estradinha", "Labra", "Oceania", "Vila Itiberê", "Palmital", "Rocio", "Jardim Iguaçu", "Vila Pantanal", "Araçá"];
+            baseLst = 29; maxLst = 10; baseTwi = 15; maxTwi = 7; baseImperm = 30; maxImperm = 40;
         }
 
         const cityInfo = this.mockData.pilotCities.find(c => c.name === cityName);
@@ -205,19 +207,37 @@ export class IpacService {
         const baseLng = cityInfo ? cityInfo.lng : -47.8827;
 
         for (let i = 0; i < bairrosMock.length; i++) {
+            const bairroNome = bairrosMock[i];
+            // Identificação de Hotspots (Áreas críticas reais)
+            const isHotspot = ["Caximba", "Tatuquara", "Parolin", "Vila Pantanal", "Araçá", "Rocio", "Estufa II", "Ipiranguinha", "Sesmaria"].includes(bairroNome);
+
+            let lst = +(baseLst + Math.random() * maxLst).toFixed(1);
+            let imperm = +(baseImperm + Math.random() * maxImperm).toFixed(1);
+            let renda = +(1000 + Math.random() * 9000).toFixed(2);
+            let ndvi = +(0.1 + Math.random() * 0.5).toFixed(2);
+            let twi = +(baseTwi + Math.random() * maxTwi).toFixed(1);
+
+            if (isHotspot) {
+                lst += 6; // Calor urbano severo
+                imperm = Math.min(95, imperm + 30); // Impermeabilização crítica
+                renda = +(1200 + Math.random() * 800).toFixed(2); // Baixa renda
+                ndvi = +(0.05 + Math.random() * 0.1).toFixed(2); // Pouca vegetação
+                twi += 4; // Risco de inundação elevado
+            }
+
             setores.push({
                 id_ra: `${cityName.replace(/\s+/g, "-").toLowerCase()}-${i}`,
-                nome_ra: `${bairrosMock[i]}`,
+                nome_ra: `${bairroNome}`,
                 cidade: cityName,
-                lst_p90: +(baseLst + Math.random() * maxLst).toFixed(1),
-                ndvi_medio: +(0.1 + Math.random() * 0.5).toFixed(2),
-                impermeabilizacao_pct: +(baseImperm + Math.random() * maxImperm).toFixed(1),
+                lst_p90: lst,
+                ndvi_medio: ndvi,
+                impermeabilizacao_pct: imperm,
                 declividade_media: +(baseDecliv + Math.random() * maxDecliv).toFixed(1),
-                twi: +(baseTwi + Math.random() * maxTwi).toFixed(1),
-                densidade_pop: +(baseDens + Math.random() * maxDens).toFixed(1),
-                renda_media: +(1000 + Math.random() * 9000).toFixed(2),
+                twi: twi,
+                densidade_pop: +(baseDens + (isHotspot ? 100 : Math.random() * maxDens)).toFixed(1),
+                renda_media: renda,
                 percentual_idosos: +(5 + Math.random() * 20).toFixed(1),
-                lat: baseLat + (Math.random() - 0.5) * 0.1, // Mock coordinates near actual city center
+                lat: baseLat + (Math.random() - 0.5) * 0.1, 
                 lng: baseLng + (Math.random() - 0.5) * 0.1
             });
         }
@@ -302,5 +322,34 @@ export class IpacService {
             const rank = sorted.filter(s => s <= v).length;
             return (rank / values.length) * 100;
         });
+    }
+
+    private validateDataIntegrity(allRows: RAraw[]) {
+        this.integrityLog = [];
+        this.isDataConsistent = true;
+        const cities = ["Brasília", "São Paulo", "Rio de Janeiro", "Belo Horizonte", "Curitiba", "Porto Alegre", "Recife", "Paranaguá", "Ubatuba", "Petrópolis"];
+        
+        cities.forEach(city => {
+            const count = allRows.filter(r => r.cidade === city).length;
+            const expected = this.EXPECTED_UNITS[city] || 0;
+            const coverage = (count / expected) * 100;
+
+            if (coverage < 80) {
+                this.integrityLog.push(`⚠️ Alerta: Cidade ${city} com cobertura territorial de ${coverage.toFixed(1)}% (Baixo de 80%)`);
+                this.isDataConsistent = false;
+            } else {
+                this.integrityLog.push(`✅ ${city}: Cobertura de ${coverage.toFixed(1)}% (${count} territórios)`);
+            }
+        });
+
+        // Identificação de Outliers Extremos (> 3 DP da média)
+        const lstValues = allRows.map(r => r.lst_p90);
+        const mean = lstValues.reduce((a, b) => a + b, 0) / lstValues.length;
+        const std = Math.sqrt(lstValues.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / lstValues.length);
+        const outliers = allRows.filter(r => Math.abs(r.lst_p90 - mean) > 3 * std);
+
+        if (outliers.length > 0) {
+            this.integrityLog.push(`🚨 Crítico: Detectados ${outliers.length} territórios com outliers extremos de temperatura.`);
+        }
     }
 }

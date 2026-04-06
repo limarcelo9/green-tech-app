@@ -19,8 +19,8 @@ export class AnalyticsComponent implements OnInit {
   dataService = inject(MockDataService);
   ipacService = inject(IpacService);
   simService = inject(SimulationService);
-
-
+ 
+   showIntegrityDetails = false;
   selectedCityName = "Brasília";
   isLoading = true;
   isCustomLocation = false;
