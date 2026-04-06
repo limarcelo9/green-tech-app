@@ -100,28 +100,38 @@ export class AnalyticsComponent implements OnInit {
   pinIndicators = { temperature: '--', floodRisk: '--', elevation: '--' };
 
   initMap() {
-    if (this.map) {
-      this.map.invalidateSize();
-      return; 
-    }
-    const mapEl = document.getElementById('simulation-map');
+    const mapEl = document.getElementById("simulation-map");
     if (!mapEl) return;
+
+    if (this.map) {
+      // Se a instância já estiver vinculada ao elemento atual, apenas redimensiona
+      if (this.map.getContainer() === mapEl) {
+        this.map.invalidateSize();
+        return;
+      }
+      // Se o container mudou (ex: via *ngIf), precisamos destruir a instância anterior
+      this.map.remove();
+      this.map = undefined;
+      this.mainMarker = undefined;
+      this.selectedPinMarker = undefined;
+    }
     
-    this.map = L.map('simulation-map', { zoomControl: false }).setView([this.center.lat, this.center.lng], this.zoom);
-    L.control.zoom({ position: 'bottomright' }).addTo(this.map);
+    this.map = L.map("simulation-map", { zoomControl: false }).setView([this.center.lat, this.center.lng], this.zoom);
+    L.control.zoom({ position: "bottomright" }).addTo(this.map);
 
     // Using Carto basemap (Free, minimal aesthetic)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
       maxZoom: 19,
-      attribution: '&copy; OpenStreetMap'
+      attribution: "&copy; OpenStreetMap"
     }).addTo(this.map);
 
     this.updateMainMarker();
 
-    this.map.on('click', (e: L.LeafletMouseEvent) => {
+    this.map.on("click", (e: L.LeafletMouseEvent) => {
       this.onMapClick(e.latlng.lat, e.latlng.lng);
     });
   }
+
 
   updateMainMarker() {
     if (!this.map) return;
