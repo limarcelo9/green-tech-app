@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, shareReplay, of } from 'rxjs';
+import { Observable, map, shareReplay, of } from "rxjs";
+import { MockDataService } from "./mock-data.service";
 
 export interface RAraw {
     id_ra: string;
@@ -13,6 +14,8 @@ export interface RAraw {
     densidade_pop: number;
     renda_media: number;
     percentual_idosos: number;
+    lat?: number;
+    lng?: number;
 }
 
 export interface SetorIPAC extends RAraw {
@@ -36,7 +39,46 @@ export interface SetorIPAC extends RAraw {
 @Injectable({ providedIn: 'root' })
 export class IpacService {
     private http = inject(HttpClient);
+    private mockData = inject(MockDataService);
     private cache$: Record<string, Observable<SetorIPAC[]>> = {};
+
+    private coordsDF: Record<string, { lat: number, lng: number }> = {
+        "Plano Piloto": { lat: -15.7938, lng: -47.8827 },
+        "Gama": { lat: -16.0232, lng: -48.0645 },
+        "Taguatinga": { lat: -15.8333, lng: -48.0500 },
+        "Brazlândia": { lat: -15.6703, lng: -48.2014 },
+        "Sobradinho": { lat: -15.6547, lng: -47.7858 },
+        "Planaltina": { lat: -15.6175, lng: -47.6531 },
+        "Paranoá": { lat: -15.7725, lng: -47.7781 },
+        "Núcleo Bandeirante": { lat: -15.8678, lng: -47.9317 },
+        "Ceilândia": { lat: -15.8233, lng: -48.1158 },
+        "Guará": { lat: -15.8202, lng: -47.9772 },
+        "Cruzeiro": { lat: -15.7892, lng: -47.9351 },
+        "Samambaia": { lat: -15.8667, lng: -48.0667 },
+        "Santa Maria": { lat: -16.0177, lng: -48.0089 },
+        "São Sebastião": { lat: -15.9083, lng: -47.7719 },
+        "Recanto das Emas": { lat: -15.9032, lng: -48.0772 },
+        "Lago Sul": { lat: -15.8456, lng: -47.8827 },
+        "Riacho Fundo": { lat: -15.8825, lng: -47.9944 },
+        "Lago Norte": { lat: -15.7483, lng: -47.8725 },
+        "Candangolândia": { lat: -15.8503, lng: -47.9472 },
+        "Águas Claras": { lat: -15.8368, lng: -48.0305 },
+        "Riacho Fundo II": { lat: -15.8944, lng: -48.0461 },
+        "Sudoeste/Octogonal": { lat: -15.7969, lng: -47.9250 },
+        "Varjão": { lat: -15.7275, lng: -47.8783 },
+        "Park Way": { lat: -15.9011, lng: -47.9625 },
+        "SCIA/Estrutural": { lat: -15.7831, lng: -47.9861 },
+        "Sobradinho II": { lat: -15.6264, lng: -47.8089 },
+        "Jardim Botânico": { lat: -15.8750, lng: -47.7850 },
+        "Itapoã": { lat: -15.7481, lng: -47.7561 },
+        "SIA": { lat: -15.8011, lng: -47.9547 },
+        "Vicente Pires": { lat: -15.8114, lng: -48.0169 },
+        "Fercal": { lat: -15.5892, lng: -47.8867 },
+        "Sol Nascente/Pôr do Sol": { lat: -15.8322, lng: -48.1436 },
+        "Arniqueira": { lat: -15.8583, lng: -48.0181 },
+        "Arapoanga": { lat: -15.6322, lng: -47.6978 },
+        "Água Quente": { lat: -15.9811, lng: -48.1961 }
+    };
 
     getSetoresIPAC(cityName: string = "Plano Piloto", state: string = "DF"): Observable<SetorIPAC[]> {
         const cacheKey = `${cityName}-${state}`;
@@ -70,33 +112,57 @@ export class IpacService {
 
         const cityLower = cityName.toLowerCase();
         
-        if (cityLower.includes('recife')) {
-            bairrosMock = ['Boa Viagem', 'Santo Amaro', 'Várzea', 'Pina', 'Ibura', 'Caxangá', 'Casa Amarela', 'Boa Vista'];
+        if (cityLower.includes("recife")) {
+            bairrosMock = ["Boa Viagem", "Santo Amaro", "Várzea", "Pina", "Ibura", "Caxangá", "Casa Amarela", "Boa Vista"];
             baseTwi = 12; maxTwi = 8;
             baseDecliv = 0; maxDecliv = 5;
             baseImperm = 50; maxImperm = 40;
-        } else if (cityLower.includes('petrópolis') || cityLower.includes('petropolis')) {
-            bairrosMock = ['Centro', 'Quitandinha', 'Itaipava', 'Bingen', 'Alto da Serra', 'Corrêas', 'Nogueira', 'Cascatinha'];
+        } else if (cityLower.includes("petrópolis") || cityLower.includes("petropolis")) {
+            bairrosMock = ["Centro", "Quitandinha", "Itaipava", "Bingen", "Alto da Serra", "Corrêas", "Nogueira", "Cascatinha"];
             baseDecliv = 15; maxDecliv = 30;
             baseTwi = 8; maxTwi = 10;
-        } else if (cityLower.includes('belo horizonte')) {
-            bairrosMock = ['Pampulha', 'Venda Nova', 'Barreiro', 'Centro-Sul', 'Noroeste', 'Leste', 'Oeste', 'Norte'];
+        } else if (cityLower.includes("belo horizonte")) {
+            bairrosMock = ["Pampulha", "Venda Nova", "Barreiro", "Centro-Sul", "Noroeste", "Leste", "Oeste", "Norte"];
             baseDecliv = 10; maxDecliv = 20;
             baseDens = 50; maxDens = 200;
-        } else if (cityLower.includes('são paulo') || cityLower.includes('sao paulo')) {
-            bairrosMock = ['Subprefeitura Sé', 'Subprefeitura Pinheiros', 'Subprefeitura Itaquera', 'Subprefeitura Lapa', 'Subprefeitura Santo Amaro', 'Subprefeitura Mooca', 'Subprefeitura Vila Mariana', 'Subprefeitura Guaianases'];
+        } else if (cityLower.includes("são paulo") || cityLower.includes("sao paulo")) {
+            bairrosMock = ["Subprefeitura Sé", "Subprefeitura Pinheiros", "Subprefeitura Itaquera", "Subprefeitura Lapa", "Subprefeitura Santo Amaro", "Subprefeitura Mooca", "Subprefeitura Vila Mariana", "Subprefeitura Guaianases"];
             baseImperm = 60; maxImperm = 40;
             baseDens = 80; maxDens = 300;
             baseLst = 35; maxLst = 15;
-        } else if (cityLower.includes('porto alegre')) {
-            bairrosMock = ['Centro Histórico', 'Restinga', 'Sarandi', 'Cidade Baixa', 'Moinhos de Vento', 'Lomba do Pinheiro', 'Rubem Berta', 'Partenon'];
+        } else if (cityLower.includes("porto alegre")) {
+            bairrosMock = ["Centro Histórico", "Restinga", "Sarandi", "Cidade Baixa", "Moinhos de Vento", "Lomba do Pinheiro", "Rubem Berta", "Partenon"];
             baseLst = 32; maxLst = 12;
             baseImperm = 40; maxImperm = 50;
+        } else if (cityLower.includes("rio de janeiro")) {
+            bairrosMock = ["Copacabana", "Ipanema", "Tijuca", "Barra da Tijuca", "Madureira", "Campo Grande", "Santa Teresa", "Recreio"];
+            baseLst = 34; maxLst = 12;
+            baseImperm = 55; maxImperm = 35;
+            baseDens = 100; maxDens = 350;
+        } else if (cityLower.includes("curitiba")) {
+            bairrosMock = ["Batel", "Água Verde", "Santa Felicidade", "Boqueirão", "CIC", "Centro Cívico", "Portão", "Cajuru"];
+            baseLst = 24; maxLst = 8;
+            baseDecliv = 3; maxDecliv = 10;
+            baseDens = 40; maxDens = 150;
+        } else if (cityLower.includes("ubatuba")) {
+            bairrosMock = ["Centro", "Itaguá", "Perequê-Açu", "Enseada", "Lázaro", "Praia Grande", "Tenório", "Félix"];
+            baseLst = 28; maxLst = 10;
+            baseImperm = 15; maxImperm = 30;
+            baseTwi = 14; maxTwi = 5;
+        } else if (cityLower.includes("paranaguá") || cityLower.includes("paranagua")) {
+            bairrosMock = ["Centro Histórico", "Estradinha", "Labra", "Oceania", "Vila Itiberê", "Palmital", "Rocio", "Jardim Iguaçu"];
+            baseLst = 29; maxLst = 10;
+            baseTwi = 15; maxTwi = 7;
+            baseImperm = 30; maxImperm = 40;
         }
+
+        const cityInfo = this.mockData.pilotCities.find(c => c.name === cityName);
+        const baseLat = cityInfo ? cityInfo.lat : -15.7938;
+        const baseLng = cityInfo ? cityInfo.lng : -47.8827;
 
         for (let i = 0; i < bairrosMock.length; i++) {
             setores.push({
-                id_ra: `${cityName.replace(/\s+/g, '-').toLowerCase()}-${i}`,
+                id_ra: `${cityName.replace(/\s+/g, "-").toLowerCase()}-${i}`,
                 nome_ra: `${bairrosMock[i]}`,
                 lst_p90: +(baseLst + Math.random() * maxLst).toFixed(1),
                 ndvi_medio: +(0.1 + Math.random() * 0.5).toFixed(2),
@@ -105,7 +171,9 @@ export class IpacService {
                 twi: +(baseTwi + Math.random() * maxTwi).toFixed(1),
                 densidade_pop: +(baseDens + Math.random() * maxDens).toFixed(1),
                 renda_media: +(1000 + Math.random() * 9000).toFixed(2),
-                percentual_idosos: +(5 + Math.random() * 20).toFixed(1)
+                percentual_idosos: +(5 + Math.random() * 20).toFixed(1),
+                lat: baseLat + (Math.random() - 0.5) * 0.1, // Mock coordinates near actual city center
+                lng: baseLng + (Math.random() - 0.5) * 0.1
             });
         }
         return setores;
@@ -147,8 +215,12 @@ export class IpacService {
             else if (ipac_score >= 40) { ipac_categoria = 'Média'; ipac_cor = '#eab308'; }
             else { ipac_categoria = 'Baixa'; ipac_cor = '#16a34a'; }
 
+            const coords = this.coordsDF[row.nome_ra];
+
             return {
                 ...row,
+                lat: row.lat || coords?.lat,
+                lng: row.lng || coords?.lng,
                 lst_norm: +lst_norm[i].toFixed(1),
                 ndvi_inv_norm: +ndvi_inv_norm[i].toFixed(1),
                 imperm_norm: +imperm_norm[i].toFixed(1),

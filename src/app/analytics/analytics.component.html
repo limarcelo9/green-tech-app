@@ -3,19 +3,19 @@
     <div class="max-w-7xl mx-auto min-h-full flex flex-col">
 
         <!-- Header -->
-        <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
+        <div class="flex flex-wrap items-start justify-between gap-4 mb-8">
             <div>
                 <h1
-                    class="text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight font-outfit mb-2">
+                    class="text-4xl lg:text-6xl font-black text-gray-900 dark:text-gray-100 tracking-tighter font-outfit mb-3">
                     Analytics</h1>
-                <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl leading-relaxed">{{ locationInfo.info }}
+                <p class="text-base text-gray-600 dark:text-gray-400 max-w-2xl leading-relaxed font-medium">{{ locationInfo.name }} — {{ locationInfo.info }}
                 </p>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-4 bg-white dark:bg-gray-900 p-2 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
                 <label
-                    class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Metrópole Piloto:</label>
+                    class="ml-2 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Metrópole Piloto</label>
                 <select (change)="selectCityByName($any($event.target).value)"
-                    class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm cursor-pointer">
+                    class="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-xs font-black text-green-700 dark:text-green-400 focus:ring-2 focus:ring-green-500/20 transition-all cursor-pointer">
                     @for (city of dataService.pilotCities; track city.name) {
                     <option [value]="city.name" [selected]="city.name === selectedCityName">{{ city.name }}</option>
                     }
@@ -24,18 +24,18 @@
         </div>
 
         <!-- Tabs -->
-        <div class="flex gap-1 mb-6 bg-gray-200 dark:bg-gray-800 p-1 rounded-xl w-fit flex-wrap">
+        <div class="flex gap-1.5 mb-8 bg-gray-200/50 dark:bg-gray-900 p-1.5 rounded-2xl w-fit flex-wrap border border-gray-200 dark:border-gray-800 backdrop-blur-sm">
             <button (click)="setTab('ipac')"
-                [class]="activeTab === 'ipac' ? 'px-5 py-2 bg-white dark:bg-gray-700 text-green-700 dark:text-green-400 font-bold rounded-lg shadow-sm text-sm' : 'px-5 py-2 text-gray-500 dark:text-gray-400 font-medium text-sm rounded-lg'">🏗️
+                [class]="activeTab === 'ipac' ? 'px-6 py-2.5 bg-white dark:bg-gray-800 text-green-700 dark:text-green-400 font-black rounded-xl shadow-lg shadow-green-600/5 text-xs uppercase tracking-wider' : 'px-6 py-2.5 text-gray-500 dark:text-gray-400 font-bold text-xs uppercase tracking-wider hover:text-green-600 transition-colors'">🏗️
                 IPAC Ranking</button>
             <button (click)="setTab('simulation')"
-                [class]="activeTab === 'simulation' ? 'px-5 py-2 bg-white dark:bg-gray-700 text-green-700 dark:text-green-400 font-bold rounded-lg shadow-sm text-sm' : 'px-5 py-2 text-gray-500 dark:text-gray-400 font-medium text-sm rounded-lg'">⚡
+                [class]="activeTab === 'simulation' ? 'px-6 py-2.5 bg-white dark:bg-gray-800 text-green-700 dark:text-green-400 font-black rounded-xl shadow-lg shadow-green-600/5 text-xs uppercase tracking-wider' : 'px-6 py-2.5 text-gray-500 dark:text-gray-400 font-bold text-xs uppercase tracking-wider hover:text-green-600 transition-colors'">⚡
                 Simulação</button>
             <button (click)="setTab('sensitivity')"
-                [class]="activeTab === 'sensitivity' ? 'px-5 py-2 bg-white dark:bg-gray-700 text-green-700 dark:text-green-400 font-bold rounded-lg shadow-sm text-sm' : 'px-5 py-2 text-gray-500 dark:text-gray-400 font-medium text-sm rounded-lg'">🔬
+                [class]="activeTab === 'sensitivity' ? 'px-6 py-2.5 bg-white dark:bg-gray-800 text-green-700 dark:text-green-400 font-black rounded-xl shadow-lg shadow-green-600/5 text-xs uppercase tracking-wider' : 'px-6 py-2.5 text-gray-500 dark:text-gray-400 font-bold text-xs uppercase tracking-wider hover:text-green-600 transition-colors'">🔬
                 Sensibilidade</button>
             <button (click)="setTab('indicators')"
-                [class]="activeTab === 'indicators' ? 'px-5 py-2 bg-white dark:bg-gray-700 text-green-700 dark:text-green-400 font-bold rounded-lg shadow-sm text-sm' : 'px-5 py-2 text-gray-500 dark:text-gray-400 font-medium text-sm rounded-lg'">🌡️
+                [class]="activeTab === 'indicators' ? 'px-6 py-2.5 bg-white dark:bg-gray-800 text-green-700 dark:text-green-400 font-black rounded-xl shadow-lg shadow-green-600/5 text-xs uppercase tracking-wider' : 'px-6 py-2.5 text-gray-500 dark:text-gray-400 font-bold text-xs uppercase tracking-wider hover:text-green-600 transition-colors'">🌡️
                 Indicadores</button>
         </div>
 
@@ -72,13 +72,16 @@
                             Baixa</p>
                     </div>
                 </div>
-                <div class="bg-gray-900 dark:bg-gray-800 rounded-xl p-5 mb-6 text-white shadow-lg">
-                    <h3 class="text-lg font-bold">IPAC = 0.4×H + 0.3×W + 0.3×P</h3>
-                    <p class="text-gray-400 text-xs mt-1">Normalização percentil | {{ setoresIPAC.length }} setores</p>
-                    <div class="flex gap-6 mt-3 text-xs flex-wrap">
-                        <span class="text-red-300">🌡️ H = 0.5×LST + 0.3×Imperm + 0.2×NDVI⁻¹</span>
-                        <span class="text-blue-300">💧 W = 0.4×TWI + 0.3×Imperm + 0.3×Decliv</span>
-                        <span class="text-purple-300">👥 P = 0.4×Dens + 0.4×Renda⁻¹ + 0.2×Idosos</span>
+                <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 mb-8 text-gray-900 dark:text-white shadow-xl shadow-green-900/5 border border-gray-100 dark:border-gray-800 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 dark:opacity-20 flex flex-col items-end">
+                        <span class="text-4xl font-black">Σ</span>
+                    </div>
+                    <h3 class="text-xl font-black tracking-tight mb-1">Cálculo: IPAC = 0.4×H + 0.3×W + 0.3×P</h3>
+                    <p class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider">Normalização percentil | {{ setoresIPAC.length }} setores analisados</p>
+                    <div class="flex gap-6 mt-6 text-[10px] font-black uppercase tracking-widest flex-wrap">
+                        <span class="text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/40 px-3 py-1.5 rounded-lg border border-red-100 dark:border-red-900/30">🌡️ H = 0.5×LST + 0.3×Imperm + 0.2×NDVI⁻¹</span>
+                        <span class="text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-900/30">💧 W = 0.4×TWI + 0.3×Imperm + 0.3×Decliv</span>
+                        <span class="text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/40 px-3 py-1.5 rounded-lg border border-purple-100 dark:border-purple-900/30">👥 P = 0.4×Dens + 0.4×Renda⁻¹ + 0.2×Idosos</span>
                     </div>
                 </div>
                 <div
@@ -344,23 +347,27 @@
                 <!-- ROW 2: Compacted Results -->
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                     <!-- Resumo Técnico (Span 2 to give it room) -->
-                    <div class="xl:col-span-2 bg-gray-900 dark:bg-gray-800 rounded-xl p-4 shadow-sm text-white relative overflow-hidden flex flex-col justify-center">
+                    <div class="xl:col-span-2 bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-xl shadow-green-900/5 text-gray-900 dark:text-white relative overflow-hidden flex flex-col justify-center border border-gray-100 dark:border-gray-800">
                         <div class="absolute inset-0 bg-green-500/5 dark:bg-green-500/10 mix-blend-overlay"></div>
-                        <h4 class="text-[9px] font-black text-green-400 uppercase tracking-widest mb-2 flex items-center gap-1.5 relative z-10">
-                            <span>📋</span> Resumo Técnico Agregado
+                        <h4 class="text-[10px] font-black text-green-700 dark:text-green-400 uppercase tracking-widest mb-4 flex items-center gap-2 relative z-10">
+                            <span class="flex items-center justify-center w-5 h-5 bg-green-100 dark:bg-green-900/50 rounded-md">📋</span> Resumo Técnico Agregado
                         </h4>
-                        <div class="grid grid-cols-2 gap-x-2 gap-y-3 relative z-10">
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-5 relative z-10">
                             <div>
-                                <p class="text-[8px] text-gray-400 font-bold uppercase mb-0.5">IPAC Médio</p>
-                                <p class="text-sm font-black">{{ ipacStats.avgScore }}</p>
+                                <p class="text-[9px] text-gray-400 dark:text-gray-500 font-black uppercase tracking-widest mb-1.5">IPAC Médio</p>
+                                <p class="text-2xl font-black tracking-tight">{{ ipacStats.avgScore }}</p>
                             </div>
                             <div>
-                                <p class="text-[8px] text-gray-400 font-bold uppercase mb-0.5">Impacto LST Estim.</p>
-                                <p class="text-sm font-black text-red-400">{{ simResult.deltaLST }}°C</p>
+                                <p class="text-[9px] text-gray-400 dark:text-gray-500 font-black uppercase tracking-widest mb-1.5">Impacto LST Estim.</p>
+                                <p class="text-2xl font-black text-red-600 dark:text-red-400 tracking-tight">{{ simResult.deltaLST }}°C</p>
                             </div>
-                            <div class="col-span-2">
-                                <p class="text-[8px] text-gray-400 font-bold uppercase mb-0.5">Impacto Hídrico (Esc. / Inf.)</p>
-                                <p class="text-xs font-bold text-blue-400">-{{ simResult.reducaoEscoamento }}% / +{{ simResult.aumentoInfiltracao }}%</p>
+                            <div class="col-span-2 border-t border-gray-50 dark:border-gray-800 pt-4">
+                                <p class="text-[9px] text-gray-400 dark:text-gray-500 font-black uppercase tracking-widest mb-1.5">Impacto Hídrico (Escoamento / Infiltração)</p>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-base font-black text-blue-600 dark:text-blue-400">-{{ simResult.reducaoEscoamento }}%</span>
+                                    <div class="h-4 w-px bg-gray-200 dark:bg-gray-700"></div>
+                                    <span class="text-base font-black text-cyan-600 dark:text-cyan-400">+{{ simResult.aumentoInfiltracao }}%</span>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -277,6 +277,12 @@ export class AnalyticsComponent implements OnInit {
       this.simInput = this.simService.calcularIntervencoesPorInvestimento(this.investimentoSimulacao);
     }
     this.simResult = this.simService.simulateThermal(setor, this.simInput, this.cenario);
+
+    // Auto-pin no mapa ao selecionar setor
+    if (setor.lat && setor.lng && this.map) {
+      this.onMapClick(setor.lat, setor.lng);
+      this.map.setView([setor.lat, setor.lng], 13);
+    }
   }
 
   getSelectedSetor(): SetorIPAC | null {

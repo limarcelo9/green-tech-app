@@ -107,7 +107,11 @@ export class MockDataService {
     { name: "Belo Horizonte", lat: -19.9167, lng: -43.9345 },
     { name: "Porto Alegre", lat: -30.0346, lng: -51.2177 },
     { name: "Recife", lat: -8.0476, lng: -34.8770 },
-    { name: "Petrópolis", lat: -22.5050, lng: -43.1786 }
+    { name: "Petrópolis", lat: -22.5050, lng: -43.1786 },
+    { name: "Rio de Janeiro", lat: -22.9068, lng: -43.1729 },
+    { name: "Curitiba", lat: -25.4284, lng: -49.2733 },
+    { name: "Ubatuba", lat: -23.4332, lng: -45.0711 },
+    { name: "Paranaguá", lat: -25.5200, lng: -48.5100 }
   ];
 
   // ===================== REGION DATA (DF SPECIFIC) =====================
