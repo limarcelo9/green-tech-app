@@ -95,7 +95,10 @@
                                         #</th>
                                     <th
                                         class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
-                                        RA</th>
+                                        Região / Setor</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
+                                        Metrópole</th>
                                     <th class="px-4 py-3 text-center text-[10px] font-bold text-red-500 uppercase">H
                                     </th>
                                     <th class="px-4 py-3 text-center text-[10px] font-bold text-blue-500 uppercase">W
@@ -115,8 +118,13 @@
                                 <tr
                                     class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                                     <td class="px-4 py-2.5 text-gray-400 font-mono text-xs">{{ i + 1 }}</td>
-                                    <td class="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200 text-xs">{{
-                                        setor.ra_nome }}</td>
+                                    <td class="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200 text-xs">
+                                        <div class="flex flex-col">
+                                            <span>{{ setor.ra_nome }}</span>
+                                            <span class="text-[9px] text-gray-400 font-normal lg:hidden">{{ setor.cidade }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase">{{ setor.cidade }}</td>
                                     <td class="px-4 py-2.5 text-center"><span
                                             class="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 px-2 py-0.5 rounded font-bold text-xs">{{
                                             setor.modulo_h }}</span></td>

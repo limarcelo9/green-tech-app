@@ -102,6 +102,7 @@ export class MockDataService {
 
   // ===================== CIDADES PILOTO (MVP) =====================
   readonly pilotCities: CityInfo[] = [
+    { name: "Ranking Geral (Brasil)", lat: -15.7938, lng: -47.8827 },
     { name: "Brasília", lat: -15.7938, lng: -47.8827 },
     { name: "São Paulo", lat: -23.5505, lng: -46.6333 },
     { name: "Belo Horizonte", lat: -19.9167, lng: -43.9345 },

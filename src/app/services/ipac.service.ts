@@ -6,6 +6,7 @@ import { MockDataService } from "./mock-data.service";
 export interface RAraw {
     id_ra: string;
     nome_ra: string;
+    cidade: string;
     lst_p90: number;
     ndvi_medio: number;
     impermeabilizacao_pct: number;
@@ -81,23 +82,66 @@ export class IpacService {
     };
 
     getSetoresIPAC(cityName: string = "Plano Piloto", state: string = "DF"): Observable<SetorIPAC[]> {
-        const cacheKey = `${cityName}-${state}`;
-        if (!this.cache$[cacheKey]) {
-            if ((cityName === 'Plano Piloto' && state === 'DF') || cityName === 'Brasília') {
-                this.cache$[cacheKey] = this.http.get('assets/data/indicadores_base_DF.csv', { responseType: 'text' })
-                    .pipe(
-                        map(csv => this.parseCSV(csv)),
-                        map(rows => this.calculateIPAC(rows)),
-                        shareReplay(1)
-                    );
-            } else {
-                this.cache$[cacheKey] = of(this.generateMockSetores(cityName)).pipe(
-                    map(rows => this.calculateIPAC(rows)),
-                    shareReplay(1)
+        return this.getGlobalData().pipe(
+            map(allData => {
+                const target = (cityName === "Plano Piloto" || cityName === "Brasília") ? "Brasília" : cityName;
+                
+                if (target.toLowerCase().includes("ranking geral")) {
+                    return allData.sort((a, b) => b.ipac_score - a.ipac_score);
+                }
+
+                // Filtro flexível para encontrar a cidade nos dados agregados
+                const filtered = allData.filter(s => 
+                    s.cidade.toLowerCase() === target.toLowerCase() ||
+                    s.id_ra.toLowerCase().includes(target.toLowerCase().replace(/\s+/g, "-")) ||
+                    s.ra_nome === cityName ||
+                    (target === "Brasília" && (s.ra_nome === "Plano Piloto" || s.id_ra.startsWith("ra")))
                 );
-            }
+
+                return filtered.sort((a, b) => b.ipac_score - a.ipac_score);
+            })
+        );
+    }
+
+    private globalData$: Observable<SetorIPAC[]> | null = null;
+
+    private getGlobalData(): Observable<SetorIPAC[]> {
+        if (!this.globalData$) {
+            const officialCities = ["Brasília", "São Paulo", "Belo Horizonte", "Porto Alegre", "Recife", "Petrópolis", "Rio de Janeiro", "Curitiba", "Ubatuba", "Paranaguá"];
+            const rawObservables: Observable<RAraw[]>[] = officialCities.map(city => {
+                if (city === "Brasília") {
+                    return this.http.get("assets/data/indicadores_base_DF.csv", { responseType: "text" }).pipe(
+                        map(csv => this.parseCSV(csv))
+                    );
+                } else {
+                    return of(this.generateMockSetores(city));
+                }
+            });
+
+            this.globalData$ = new Observable<SetorIPAC[]>(observer => {
+                const results: RAraw[][] = [];
+                let count = 0;
+                rawObservables.forEach((obs$, i) => {
+                    obs$.subscribe({
+                        next: rows => {
+                            results[i] = rows;
+                            count++;
+                            if (count === rawObservables.length) {
+                                const flattened = results.reduce((acc, val) => acc.concat(val), []);
+                                try {
+                                    observer.next(this.calculateIPAC(flattened));
+                                    observer.complete();
+                                } catch (e) {
+                                    observer.error(e);
+                                }
+                            }
+                        },
+                        error: err => observer.error(err)
+                    });
+                });
+            }).pipe(shareReplay(1));
         }
-        return this.cache$[cacheKey];
+        return this.globalData$;
     }
 
     private generateMockSetores(cityName: string): RAraw[] {
@@ -164,6 +208,7 @@ export class IpacService {
             setores.push({
                 id_ra: `${cityName.replace(/\s+/g, "-").toLowerCase()}-${i}`,
                 nome_ra: `${bairrosMock[i]}`,
+                cidade: cityName,
                 lst_p90: +(baseLst + Math.random() * maxLst).toFixed(1),
                 ndvi_medio: +(0.1 + Math.random() * 0.5).toFixed(2),
                 impermeabilizacao_pct: +(baseImperm + Math.random() * maxImperm).toFixed(1),
@@ -189,11 +234,13 @@ export class IpacService {
                 const key = h.trim();
                 obj[key] = (key === 'id_ra' || key === 'nome_ra') ? values[i].trim() : parseFloat(values[i].trim());
             });
+            obj["cidade"] = "Brasília";
             return obj as RAraw;
         });
     }
 
     private calculateIPAC(rows: RAraw[]): SetorIPAC[] {
+        // Normalização GLOBAL por Percentil (Calculado sobre o pool de todas as cidades)
         const lst_norm = this.normalizePercentile(rows.map(r => r.lst_p90));
         const ndvi_inv_norm = this.normalizePercentile(rows.map(r => -r.ndvi_medio));
         const imperm_norm = this.normalizePercentile(rows.map(r => r.impermeabilizacao_pct));
@@ -204,16 +251,25 @@ export class IpacService {
         const idosos_norm = this.normalizePercentile(rows.map(r => r.percentual_idosos));
 
         return rows.map((row, i) => {
+            // Novas fórmulas conforme diretriz metodológica
+            // H = 0.5 * LST_norm + 0.3 * Imperm_norm + 0.2 * (1 - NDVI_norm)
             const modulo_h = (0.5 * lst_norm[i]) + (0.3 * imperm_norm[i]) + (0.2 * ndvi_inv_norm[i]);
+            
+            // W = 0.4 * TWI_norm + 0.3 * Imperm_norm + 0.3 * Decliv_norm
             const modulo_w = (0.4 * twi_norm[i]) + (0.3 * imperm_norm[i]) + (0.3 * decliv_norm[i]);
+            
+            // P = 0.4 * Dens_norm + 0.4 * (1 - Renda_norm) + 0.2 * Idosos_norm
             const modulo_p = (0.4 * densidade_norm[i]) + (0.4 * renda_inv_norm[i]) + (0.2 * idosos_norm[i]);
+            
+            // IPAC Final = 0.4 * H + 0.3 * W + 0.3 * P
             const ipac_score = (0.4 * modulo_h) + (0.3 * modulo_w) + (0.3 * modulo_p);
 
             let ipac_categoria: string, ipac_cor: string;
-            if (ipac_score >= 80) { ipac_categoria = 'Muito Alta'; ipac_cor = '#dc2626'; }
-            else if (ipac_score >= 60) { ipac_categoria = 'Alta'; ipac_cor = '#ea580c'; }
-            else if (ipac_score >= 40) { ipac_categoria = 'Média'; ipac_cor = '#eab308'; }
-            else { ipac_categoria = 'Baixa'; ipac_cor = '#16a34a'; }
+            // Classificação rigorosa: >=80 Muito Alta | 60-79 Alta | 40-59 Média | <40 Baixa
+            if (ipac_score >= 80) { ipac_categoria = "Muito Alta"; ipac_cor = "#dc2626"; }
+            else if (ipac_score >= 60) { ipac_categoria = "Alta"; ipac_cor = "#ea580c"; }
+            else if (ipac_score >= 40) { ipac_categoria = "Média"; ipac_cor = "#eab308"; }
+            else { ipac_categoria = "Baixa"; ipac_cor = "#16a34a"; }
 
             const coords = this.coordsDF[row.nome_ra];
 
@@ -237,7 +293,7 @@ export class IpacService {
                 ipac_cor,
                 ra_nome: row.nome_ra,
             };
-        }).sort((a, b) => b.ipac_score - a.ipac_score);
+        });
     }
 
     private normalizePercentile(values: number[]): number[] {
