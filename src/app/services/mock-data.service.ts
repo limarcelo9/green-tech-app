@@ -102,11 +102,12 @@ export class MockDataService {
 
   // ===================== CIDADES PILOTO (MVP) =====================
   readonly pilotCities: CityInfo[] = [
-    { name: 'São Paulo', lat: -23.5505, lng: -46.6333 },
-    { name: 'Belo Horizonte', lat: -19.9167, lng: -43.9345 },
-    { name: 'Porto Alegre', lat: -30.0346, lng: -51.2177 },
-    { name: 'Recife', lat: -8.0476, lng: -34.8770 },
-    { name: 'Petrópolis', lat: -22.5050, lng: -43.1786 }
+    { name: "Brasília", lat: -15.7938, lng: -47.8827 },
+    { name: "São Paulo", lat: -23.5505, lng: -46.6333 },
+    { name: "Belo Horizonte", lat: -19.9167, lng: -43.9345 },
+    { name: "Porto Alegre", lat: -30.0346, lng: -51.2177 },
+    { name: "Recife", lat: -8.0476, lng: -34.8770 },
+    { name: "Petrópolis", lat: -22.5050, lng: -43.1786 }
   ];
 
   // ===================== REGION DATA (DF SPECIFIC) =====================

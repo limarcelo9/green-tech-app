@@ -21,7 +21,7 @@ export class AnalyticsComponent implements OnInit {
   simService = inject(SimulationService);
 
 
-  selectedCityName = 'São Paulo';
+  selectedCityName = "Brasília";
   isLoading = true;
   isCustomLocation = false;
 

@@ -41,7 +41,7 @@ export class IpacService {
     getSetoresIPAC(cityName: string = "Plano Piloto", state: string = "DF"): Observable<SetorIPAC[]> {
         const cacheKey = `${cityName}-${state}`;
         if (!this.cache$[cacheKey]) {
-            if (cityName === 'Plano Piloto' && state === 'DF') {
+            if ((cityName === 'Plano Piloto' && state === 'DF') || cityName === 'Brasília') {
                 this.cache$[cacheKey] = this.http.get('assets/data/indicadores_base_DF.csv', { responseType: 'text' })
                     .pipe(
                         map(csv => this.parseCSV(csv)),
