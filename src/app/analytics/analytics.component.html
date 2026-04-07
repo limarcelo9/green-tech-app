@@ -8,7 +8,10 @@
                 <h1
                     class="text-4xl lg:text-6xl font-black text-gray-900 dark:text-gray-100 tracking-tighter font-outfit mb-3">
                     Analytics</h1>
-                <p class="text-base text-gray-600 dark:text-gray-400 max-w-2xl leading-relaxed font-medium">{{ locationInfo.name }} — {{ locationInfo.info }}
+                <p class="text-base text-gray-600 dark:text-gray-400 max-w-2xl leading-relaxed font-medium">
+                    {{ locationInfo.name }} — {{ locationInfo.info }}
+                    <span *ngIf="isOficial" class="ml-2 px-2 py-0.5 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 text-[9px] font-black uppercase rounded-lg border border-green-200 dark:border-green-800 shadow-sm animate-pulse">Base Oficial</span>
+                    <span *ngIf="!isOficial" class="ml-2 px-2 py-0.5 bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 text-[9px] font-black uppercase rounded-lg border border-amber-100 dark:border-amber-800 shadow-sm">Simulação de Inteligência</span>
                 </p>
             </div>
             <div class="flex items-center gap-4 bg-white dark:bg-gray-900 p-2 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
@@ -52,7 +55,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-2">
                     @for (log of ipacService.integrityLog; track log) {
                         <div class="text-[10px] font-mono text-gray-400 flex items-center gap-2">
-                            <span class="text-green-600 font-bold">>></span> {{ log }}
+                            <span class="text-green-600 font-bold">>></span> 
+                            <button *ngIf="log.includes('anomalias')" (click)="toggleAnomalyFilter()"
+                                [class.text-amber-400]="showOnlyAnomalies"
+                                class="hover:underline text-left transition-colors">
+                                {{ log }} {{ showOnlyAnomalies ? "(Exibir Tudo)" : "(Clique para Rastrear)" }}
+                            </button>
+                            <span *ngIf="!log.includes('anomalias')">{{ log }}</span>
                         </div>
                     }
                 </div>
@@ -151,14 +160,21 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @for (setor of setoresIPAC; track setor.id_ra; let i = $index) {
+                                @for (setor of filteredSetores; track setor.id_ra; let i = $index) {
                                 <tr
+                                    [class.is-anomalia]="setor.isAnomalia"
                                     class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                                     <td class="px-4 py-2.5 text-gray-400 font-mono text-xs">{{ i + 1 }}</td>
                                     <td class="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200 text-xs">
                                         <div class="flex flex-col">
-                                            <span>{{ setor.ra_nome }}</span>
-                                            <span class="text-[9px] text-gray-400 font-normal lg:hidden">{{ setor.cidade }}</span>
+                                            <div class="flex items-center gap-2">
+                                                <span>{{ setor.ra_nome }}</span>
+                                                @if (setor.isAnomalia) {
+                                                <span 
+                                                    class="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 text-[8px] font-black uppercase rounded border border-amber-200 dark:border-amber-800">🔬 Anomalia</span>
+                                                }
+                                            </div>
+                                            <span class="text-[9px] text-gray-400 font-normal lg:hidden text-xs">{{ setor.cidade }}</span>
                                         </div>
                                     </td>
                                     <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase">{{ setor.cidade }}</td>
@@ -319,10 +335,11 @@
                     <!-- Map Module -->
                     <div class="md:col-span-2 w-full h-[320px] bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden relative">
                         <div id="simulation-map" class="w-full h-full z-0"></div>
+                        <div class="satellite-scan" *ngIf="showOnlyAnomalies"></div>
 
                         <!-- Floating Indicator Panel -->
                         <div *ngIf="selectedPin"
-                            class="absolute bottom-3 left-3 max-w-[280px] w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-md rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 z-50">
+                            class="absolute bottom-3 left-3 max-w-[280px] w-full bg-gray-100/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 z-50">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center gap-2">
                                     <div class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></div>
@@ -623,5 +640,116 @@
                 </div>
             </div>
         </div>
+        <!-- ===== TECHNICAL FOOTER ===== -->
+        <footer class="mt-12 py-8 border-t border-gray-200 dark:border-gray-800">
+            <div class="flex flex-col md:flex-row justify-between items-start gap-8">
+                <div class="flex-1">
+                    <h5 class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">Fontes e Referências Técnicas</h5>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div>
+                            <p class="text-[9px] font-black text-gray-800 dark:text-gray-200 uppercase mb-1">🌤️ Clima / Térmico</p>
+                            <p class="text-[9px] text-gray-500">Landsat 8/9 (NASA), INPE, SRTM Earth Data.</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] font-black text-gray-800 dark:text-gray-200 uppercase mb-1">🌳 Vegetação</p>
+                            <p class="text-[9px] text-gray-500">Sentinel-2 (Copernicus/ESA), MapBiomas.</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] font-black text-gray-800 dark:text-gray-200 uppercase mb-1">👥 Social / Infra</p>
+                            <p class="text-[9px] text-gray-500">IBGE Censo 2022, Malhas Setoriais GDF/Prefeituras.</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] font-black text-gray-800 dark:text-gray-200 uppercase mb-1">📐 Metodologia</p>
+                            <p class="text-[9px] text-gray-500 font-bold text-green-600 dark:text-green-400">GreenTech IPAC-IVU v2.1</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 max-w-[280px]">
+                    <p class="text-[10px] font-bold text-gray-600 dark:text-gray-400 leading-relaxed italic">
+                        "Transparência é a base da resiliência. Atualmente exibindo: <b class="text-green-600">{{ dataFonte }}</b>"
+                    </p>
+                </div>
+            </div>
+            <div class="mt-8 text-center">
+                <p class="text-[9px] font-bold text-gray-400 dark:text-gray-600 uppercase tracking-[0.2em]">&copy; 2026 GEOSPATIAL INTELLIGENCE CORE — GREEN-TECH</p>
+            </div>
+        </footer>
     </div>
 </div>
+
+<!-- ===== ANOMALY SCIENTIFIC REPORT MODAL ===== -->
+@if (selectedAnomaly) {
+<div class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+    <div class="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-[32px] shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden relative">
+        <!-- Close -->
+        <button (click)="selectedAnomaly = null" class="absolute top-6 right-6 p-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 hover:text-red-500 transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+
+        <div class="p-10">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center text-red-600">
+                    <span class="text-xl">🔬</span>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Relatório de Auditoria Científica</h2>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">Anomalia Térmica Sustentada Detectada</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                <!-- Local -->
+                <div class="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-3xl border border-gray-100 dark:border-gray-700">
+                    <p class="text-[10px] font-black text-gray-400 uppercase mb-4 tracking-widest">Métricas do Território ({{ selectedAnomaly.ra_nome }})</p>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-end">
+                            <span class="text-xs font-bold text-gray-600 dark:text-gray-400">Temp. Superfície (LST):</span>
+                            <span class="text-xl font-black text-red-600">{{ selectedAnomaly.lst_p90 }}°C</span>
+                        </div>
+                        <div class="space-y-2">
+                             <div class="flex justify-between text-[10px] font-bold uppercase"><span class="text-red-500">Módulo H</span> <span>{{ selectedAnomaly.modulo_h }}%</span></div>
+                             <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                 <div class="h-full bg-red-500" [style.width.%]="selectedAnomaly.modulo_h"></div>
+                             </div>
+                             <div class="flex justify-between text-[10px] font-bold uppercase"><span class="text-blue-500">Módulo W</span> <span>{{ selectedAnomaly.modulo_w }}%</span></div>
+                             <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                 <div class="h-full bg-blue-500" [style.width.%]="selectedAnomaly.modulo_w"></div>
+                             </div>
+                             <div class="flex justify-between text-[10px] font-bold uppercase"><span class="text-purple-500">Módulo P</span> <span>{{ selectedAnomaly.modulo_p }}%</span></div>
+                             <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                 <div class="h-full bg-purple-500" [style.width.%]="selectedAnomaly.modulo_p"></div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- National Average -->
+                <div class="bg-blue-50/30 dark:bg-blue-900/10 p-6 rounded-3xl border border-blue-100/50 dark:border-blue-800/30">
+                    <p class="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase mb-4 tracking-widest">Benchmark Nacional (Média 10 Cidades)</p>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-end">
+                            <span class="text-xs font-bold text-gray-600 dark:text-gray-400">Média Consolidada:</span>
+                            <span class="text-xl font-black text-blue-600">{{ ipacService.globalMetrics.lst }}°C</span>
+                        </div>
+                        <div class="pt-2">
+                             <p class="text-[10px] font-bold text-blue-800 dark:text-blue-300 leading-relaxed italic mb-4">
+                                Este bairro apresenta um desvio térmico de <b class="text-red-600 text-xs">+{{ (selectedAnomaly.lst_p90 - ipacService.globalMetrics.lst).toFixed(1) }}°C</b> em relação à média nacional.
+                             </p>
+                             <div class="p-3 bg-white dark:bg-gray-800 rounded-xl border border-blue-100 dark:border-blue-700 shadow-sm">
+                                <p class="text-[9px] font-black uppercase text-gray-400 mb-1">Diagnóstico IA:</p>
+                                <p class="text-[10px] font-bold dark:text-gray-200">Alto risco de Ilha de Calor por solo selado em área de densidade habitacional elevada.</p>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button (click)="selectedAnomaly = null" class="px-8 py-3 bg-gray-900 dark:bg-white dark:text-gray-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all">
+                    Sair da Auditoria
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+}

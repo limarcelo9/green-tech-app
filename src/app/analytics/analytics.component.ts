@@ -24,6 +24,10 @@ export class AnalyticsComponent implements OnInit {
   selectedCityName = "Brasília";
   isLoading = true;
   isCustomLocation = false;
+  isOficial = false;
+  dataFonte = "";
+  showOnlyAnomalies = false;
+  selectedAnomaly: SetorIPAC | null = null;
 
   indicators = {
     temperature: '-- °C', floodRisk: 'Carregando...', elevation: '-- m',
@@ -43,6 +47,44 @@ export class AnalyticsComponent implements OnInit {
 
   // Tabs
   activeTab: 'ipac' | 'simulation' | 'sensitivity' | 'indicators' = 'ipac';
+
+  get filteredSetores(): SetorIPAC[] {
+    if (this.showOnlyAnomalies) {
+      return this.setoresIPAC.filter(s => s.isAnomalia);
+    }
+    return this.setoresIPAC;
+  }
+
+  toggleAnomalyFilter() {
+    this.showOnlyAnomalies = !this.showOnlyAnomalies;
+    if (this.showOnlyAnomalies) {
+      this.setTab("simulation");
+      
+      // Smart Focus: Identifica o hotspot mais crítico (maior LST) para zoom imediato
+      const critical = [...this.setoresIPAC]
+        .filter(s => s.isAnomalia)
+        .sort((a, b) => (b.lst_p90 || 0) - (a.lst_p90 || 0))[0];
+
+      setTimeout(() => {
+        if (this.map) {
+          if (critical && critical.lat && critical.lng) {
+            this.map.setView([critical.lat, critical.lng], 16);
+          }
+          this.updateAnomalyMarkers();
+        }
+      }, 400);
+    } else {
+      if (this.map) this.updateAnomalyMarkers();
+    }
+  }
+
+  openAnomalyReport(setor: SetorIPAC) {
+    this.selectedAnomaly = setor;
+    this.activeTab = "ipac"; // Garante visibilidade
+    if (this.map && setor.lat && setor.lng) {
+      this.map.setView([setor.lat, setor.lng], 14);
+    }
+  }
 
   setTab(tab: 'ipac' | 'simulation' | 'sensitivity' | 'indicators') {
     this.activeTab = tab;
@@ -90,6 +132,7 @@ export class AnalyticsComponent implements OnInit {
 
   // Map Integration
   map: L.Map | undefined;
+  anomalyLayerGroup: L.LayerGroup | undefined;
   mainMarker: L.Marker | undefined;
   selectedPinMarker: L.Marker | undefined;
 
@@ -104,9 +147,10 @@ export class AnalyticsComponent implements OnInit {
     if (!mapEl) return;
 
     if (this.map) {
-      // Se a instância já estiver vinculada ao elemento atual, apenas redimensiona
+      // Se a instância já estiver vinculada ao elemento atual, apenas redimensiona e atualiza camadas
       if (this.map.getContainer() === mapEl) {
         this.map.invalidateSize();
+        this.updateAnomalyMarkers();
         return;
       }
       // Se o container mudou (ex: via *ngIf), precisamos destruir a instância anterior
@@ -125,7 +169,9 @@ export class AnalyticsComponent implements OnInit {
       attribution: "&copy; OpenStreetMap"
     }).addTo(this.map);
 
+    this.anomalyLayerGroup = L.layerGroup().addTo(this.map);
     this.updateMainMarker();
+    this.updateAnomalyMarkers();
 
     this.map.on("click", (e: L.LeafletMouseEvent) => {
       this.onMapClick(e.latlng.lat, e.latlng.lng);
@@ -139,7 +185,7 @@ export class AnalyticsComponent implements OnInit {
       this.mainMarker.setLatLng([this.center.lat, this.center.lng]);
     } else {
       const cityIcon = L.divIcon({
-        className: 'custom-city-icon',
+        className: "custom-city-icon",
         html: `<div style="background-color: #16a34a; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
         iconSize: [20, 20],
         iconAnchor: [10, 10]
@@ -147,6 +193,34 @@ export class AnalyticsComponent implements OnInit {
       this.mainMarker = L.marker([this.center.lat, this.center.lng], { icon: cityIcon }).addTo(this.map);
     }
     this.mainMarker.bindPopup(`<b>${this.selectedCityName}</b>`).openPopup();
+  }
+
+  updateAnomalyMarkers() {
+    if (!this.map || !this.anomalyLayerGroup) return;
+    this.anomalyLayerGroup.clearLayers();
+
+    if (this.showOnlyAnomalies) {
+      const anomalies = this.setoresIPAC.filter(s => s.isAnomalia);
+      anomalies.forEach(s => {
+        if (s.lat && s.lng) {
+          const radarIcon = L.divIcon({
+            className: "radar-anomalia",
+            html: `<div class="radar-anomalia-core"></div>`,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+          });
+          const m = L.marker([s.lat, s.lng], { icon: radarIcon }).addTo(this.anomalyLayerGroup!);
+          m.bindPopup(`
+            <div class="p-2">
+              <p class="text-[10px] font-black text-red-600 uppercase mb-1">🔬 Anomalia Detectada</p>
+              <p class="text-xs font-bold mb-2">${s.ra_nome}</p>
+              <button onclick="window.dispatchEvent(new CustomEvent('open-anomaly-report', {detail: '${s.id_ra}'}))" 
+                class="w-full py-1 bg-red-600 text-white text-[9px] font-bold rounded uppercase">Ver Relatório Comparativo</button>
+            </div>
+          `);
+        }
+      });
+    }
   }
 
   ngOnInit() {
@@ -162,6 +236,12 @@ export class AnalyticsComponent implements OnInit {
         this.fetchByCoords(lat, lng);
         return;
       }
+    });
+
+    window.addEventListener("open-anomaly-report", (e: any) => {
+      const id = e.detail;
+      const setor = this.setoresIPAC.find(s => s.id_ra === id);
+      if (setor) this.openAnomalyReport(setor);
     });
 
     this.route.paramMap.subscribe(() => {
@@ -184,6 +264,7 @@ export class AnalyticsComponent implements OnInit {
     this.center = { lat: city.lat, lng: city.lng };
     this.zoom = 12;
     this.clearPin();
+    this.showOnlyAnomalies = false;
     if (this.map) {
       this.map.setView([this.center.lat, this.center.lng], this.zoom);
       this.updateMainMarker();
@@ -228,9 +309,13 @@ export class AnalyticsComponent implements OnInit {
 
   loadIPAC(cityName: string, state: string) {
     this.ipacLoading = true;
+    this.showOnlyAnomalies = false;
     this.ipacService.getSetoresIPAC(cityName, state).subscribe(data => {
       this.setoresIPAC = data;
       this.ipacLoading = false;
+
+      this.isOficial = data.length > 0 ? data[0].isOficial : false;
+      this.dataFonte = data.length > 0 ? data[0].fonte : "";
 
       const avgH = data.reduce((sum, s) => sum + s.modulo_h, 0) / data.length;
       const avgW = data.reduce((sum, s) => sum + s.modulo_w, 0) / data.length;
