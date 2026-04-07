@@ -23,13 +23,18 @@ export interface SolucaoSimulacao {
     custo_unitario: number | null;
     fator_regional: number;
     area_equivalente?: number; // m2 por unidade (para comparabilidade)
-    indicadores_afetados: IndicadorSimulacao[];
+    impacto_por_indicador: {
+        H: number;
+        W: number;
+        P: number;
+    };
+    indicadores_detalhados_afetados: IndicadorSimulacao[];
     impactos: ImpactoSolucao[];
     observacao_tecnica: string;
 }
 
 export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
-    // --- BLOCO 1: CALOR ---
+    // --- BLOCO 1: CALOR (H) ---
     {
         id: "cobertura_arborea",
         nome: "Cobertura Arbórea",
@@ -40,7 +45,8 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         percentual: 0,
         custo_unitario: 250,
         fator_regional: 1.0,
-        indicadores_afetados: ["lst", "conforto_termico", "escoamento"],
+        impacto_por_indicador: { H: 0.8, W: 0.4, P: 0.5 },
+        indicadores_detalhados_afetados: ["lst", "conforto_termico", "escoamento"],
         impactos: [
             { indicador: "lst", fatores: { conservador: 0.04, medio: 0.07, agressivo: 0.12 } },
             { indicador: "escoamento", fatores: { conservador: 0.15, medio: 0.25, agressivo: 0.40 } }
@@ -57,7 +63,8 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         percentual: 0,
         custo_unitario: 180,
         fator_regional: 1.0,
-        indicadores_afetados: ["lst", "conforto_termico", "escoamento", "infiltracao"],
+        impacto_por_indicador: { H: 0.6, W: 0.7, P: 0.8 },
+        indicadores_detalhados_afetados: ["lst", "conforto_termico", "escoamento", "infiltracao"],
         impactos: [
             { indicador: "lst", fatores: { conservador: 0.03, medio: 0.05, agressivo: 0.09 } },
             { indicador: "escoamento", fatores: { conservador: 0.30, medio: 0.50, agressivo: 0.75 } },
@@ -75,7 +82,8 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         percentual: 0,
         custo_unitario: 850,
         fator_regional: 1.0,
-        indicadores_afetados: ["lst", "conforto_termico", "energia", "escoamento"],
+        impacto_por_indicador: { H: 0.5, W: 0.3, P: 0.2 },
+        indicadores_detalhados_afetados: ["lst", "conforto_termico", "energia", "escoamento"],
         impactos: [
             { indicador: "lst", fatores: { conservador: 0.02, medio: 0.04, agressivo: 0.06 } },
             { indicador: "energia", fatores: { conservador: 0.05, medio: 0.10, agressivo: 0.15 } },
@@ -93,7 +101,8 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         percentual: 0,
         custo_unitario: 65,
         fator_regional: 1.0,
-        indicadores_afetados: ["lst", "energia"],
+        impacto_por_indicador: { H: 0.7, W: 0.0, P: 0.1 },
+        indicadores_detalhados_afetados: ["lst", "energia"],
         impactos: [
             { indicador: "lst", fatores: { conservador: 0.03, medio: 0.06, agressivo: 0.09 } },
             { indicador: "energia", fatores: { conservador: 0.10, medio: 0.16, agressivo: 0.22 } }
@@ -110,7 +119,8 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         percentual: 0,
         custo_unitario: 120,
         fator_regional: 1.0,
-        indicadores_afetados: ["lst", "conforto_termico"],
+        impacto_por_indicador: { H: 0.6, W: 0.0, P: 0.1 },
+        indicadores_detalhados_afetados: ["lst", "conforto_termico"],
         impactos: [
             { indicador: "lst", fatores: { conservador: 0.03, medio: 0.05, agressivo: 0.08 } }
         ],
@@ -126,7 +136,8 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         percentual: 0,
         custo_unitario: 950,
         fator_regional: 1.0,
-        indicadores_afetados: ["lst", "conforto_termico", "energia"],
+        impacto_por_indicador: { H: 0.4, W: 0.1, P: 0.3 },
+        indicadores_detalhados_afetados: ["lst", "conforto_termico", "energia"],
         impactos: [
             { indicador: "lst", fatores: { conservador: 0.015, medio: 0.03, agressivo: 0.05 } },
             { indicador: "energia", fatores: { conservador: 0.04, medio: 0.08, agressivo: 0.12 } }
@@ -134,7 +145,7 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         observacao_tecnica: "Jardins verticais para resfriamento de fachadas e microclima local."
     },
 
-    // --- BLOCO 2: ÁGUA / ENCHENTES ---
+    // --- BLOCO 2: ÁGUA / ENCHENTES (W) ---
     {
         id: "desimpermeabilizacao",
         nome: "Desimpermeabilização",
@@ -145,7 +156,8 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         percentual: 0,
         custo_unitario: 320,
         fator_regional: 1.0,
-        indicadores_afetados: ["escoamento", "infiltracao", "lst"],
+        impacto_por_indicador: { H: 0.2, W: 0.9, P: 0.3 },
+        indicadores_detalhados_afetados: ["escoamento", "infiltracao", "lst"],
         impactos: [
             { indicador: "escoamento", fatores: { conservador: 0.25, medio: 0.45, agressivo: 0.70 } },
             { indicador: "infiltracao", fatores: { conservador: 0.20, medio: 0.40, agressivo: 0.65 } },
@@ -163,8 +175,9 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         percentual: 0,
         custo_unitario: 2500,
         fator_regional: 1.0,
-        area_equivalente: 25, // 1 Jardim de Chuva equivale a ~25m2
-        indicadores_afetados: ["escoamento", "infiltracao"],
+        area_equivalente: 25,
+        impacto_por_indicador: { H: 0.1, W: 0.8, P: 0.4 },
+        indicadores_detalhados_afetados: ["escoamento", "infiltracao"],
         impactos: [
             { indicador: "escoamento", fatores: { conservador: 1.1, medio: 2.5, agressivo: 3.85 } },
             { indicador: "infiltracao", fatores: { conservador: 0.8, medio: 1.8, agressivo: 2.8 } }
@@ -181,7 +194,8 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         percentual: 0,
         custo_unitario: 450,
         fator_regional: 1.0,
-        indicadores_afetados: ["escoamento", "infiltracao"],
+        impacto_por_indicador: { H: 0.1, W: 0.7, P: 0.2 },
+        indicadores_detalhados_afetados: ["escoamento", "infiltracao"],
         impactos: [
             { indicador: "escoamento", fatores: { conservador: 0.5, medio: 1.1, agressivo: 1.75 } },
             { indicador: "infiltracao", fatores: { conservador: 0.4, medio: 0.9, agressivo: 1.4 } }
@@ -198,7 +212,9 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         percentual: 0,
         custo_unitario: 1200,
         fator_regional: 1.0,
-        indicadores_afetados: ["escoamento", "infiltracao"],
+        area_equivalente: 15,
+        impacto_por_indicador: { H: 0.1, W: 0.6, P: 0.3 },
+        indicadores_detalhados_afetados: ["escoamento", "infiltracao"],
         impactos: [
             { indicador: "escoamento", fatores: { conservador: 1.0, medio: 2.2, agressivo: 3.5 } },
             { indicador: "infiltracao", fatores: { conservador: 0.8, medio: 1.7, agressivo: 2.8 } }
@@ -215,7 +231,8 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         percentual: 0,
         custo_unitario: 380,
         fator_regional: 1.0,
-        indicadores_afetados: ["escoamento", "infiltracao"],
+        impacto_por_indicador: { H: 0.1, W: 0.8, P: 0.2 },
+        indicadores_detalhados_afetados: ["escoamento", "infiltracao"],
         impactos: [
             { indicador: "escoamento", fatores: { conservador: 0.2, medio: 0.4, agressivo: 0.65 } },
             { indicador: "infiltracao", fatores: { conservador: 0.15, medio: 0.35, agressivo: 0.60 } }
@@ -232,7 +249,8 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         percentual: 0,
         custo_unitario: 550,
         fator_regional: 1.0,
-        indicadores_afetados: ["infiltracao"],
+        impacto_por_indicador: { H: 0.0, W: 0.7, P: 0.1 },
+        indicadores_detalhados_afetados: ["infiltracao"],
         impactos: [
             { indicador: "infiltracao", fatores: { conservador: 0.3, medio: 0.6, agressivo: 1.0 } }
         ],
@@ -248,7 +266,8 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         percentual: 0,
         custo_unitario: 850,
         fator_regional: 1.0,
-        indicadores_afetados: ["escoamento"],
+        impacto_por_indicador: { H: 0.2, W: 0.9, P: 0.5 },
+        indicadores_detalhados_afetados: ["escoamento"],
         impactos: [
             { indicador: "escoamento", fatores: { conservador: 2.0, medio: 4.5, agressivo: 7.0 } }
         ],
@@ -264,15 +283,16 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         percentual: 0,
         custo_unitario: 15000,
         fator_regional: 1.0,
-        area_equivalente: 50, // 1 Escada Hidráulica equivale a ~50m2
-        indicadores_afetados: ["escoamento"],
+        area_equivalente: 50,
+        impacto_por_indicador: { H: 0.0, W: 0.8, P: 0.1 },
+        indicadores_detalhados_afetados: ["escoamento"],
         impactos: [
             { indicador: "escoamento", fatores: { conservador: 0.8, medio: 1.5, agressivo: 2.8 } }
         ],
         observacao_tecnica: "Controle de erosão e redução de velocidade da água em declividades."
     },
 
-    // --- BLOCO 3: QUALIDADE URBANA / RESILIÊNCIA ---
+    // --- BLOCO 3: QUALIDADE URBANA / RESILIÊNCIA (P) ---
     {
         id: "parques_lineares",
         nome: "Parques Lineares",
@@ -283,7 +303,8 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         percentual: 0,
         custo_unitario: 550,
         fator_regional: 1.0,
-        indicadores_afetados: ["lst", "escoamento", "infiltracao", "conforto_termico"],
+        impacto_por_indicador: { H: 0.5, W: 0.6, P: 0.9 },
+        indicadores_detalhados_afetados: ["lst", "escoamento", "infiltracao", "conforto_termico"],
         impactos: [
             { indicador: "lst", fatores: { conservador: 0.04, medio: 0.08, agressivo: 0.15 } },
             { indicador: "escoamento", fatores: { conservador: 0.40, medio: 0.65, agressivo: 0.90 } }
@@ -300,7 +321,8 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         percentual: 0,
         custo_unitario: 1200,
         fator_regional: 1.0,
-        indicadores_afetados: ["escoamento", "infiltracao"],
+        impacto_por_indicador: { H: 0.4, W: 0.8, P: 0.8 },
+        indicadores_detalhados_afetados: ["escoamento", "infiltracao"],
         impactos: [
             { indicador: "escoamento", fatores: { conservador: 3.5, medio: 7.0, agressivo: 12.0 } }
         ],
@@ -316,7 +338,8 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         percentual: 0,
         custo_unitario: 950,
         fator_regional: 1.0,
-        indicadores_afetados: ["escoamento", "infiltracao", "lst"],
+        impacto_por_indicador: { H: 0.4, W: 0.6, P: 0.8 },
+        indicadores_detalhados_afetados: ["escoamento", "infiltracao", "lst"],
         impactos: [
             { indicador: "escoamento", fatores: { conservador: 4.0, medio: 8.5, agressivo: 15.0 } },
             { indicador: "lst", fatores: { conservador: 0.03, medio: 0.06, agressivo: 0.10 } }
@@ -331,9 +354,10 @@ export const BIBLIOTECA_SOLUCOES: SolucaoSimulacao[] = [
         unidade: "m2",
         area_elegivel: null,
         percentual: 0,
-        custo_unitario: null,
+        custo_unitario: 800,
         fator_regional: 1.0,
-        indicadores_afetados: ["lst", "conforto_termico"],
+        impacto_por_indicador: { H: 0.6, W: 0.4, P: 0.9 },
+        indicadores_detalhados_afetados: ["lst", "conforto_termico"],
         impactos: [
             { indicador: "lst", fatores: { conservador: 0.02, medio: 0.04, agressivo: 0.07 } }
         ],

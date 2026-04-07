@@ -5,7 +5,8 @@ import { ActivatedRoute } from '@angular/router';
 import * as L from 'leaflet';
 import { MockDataService, CityInfo, TimelinePoint } from '../services/mock-data.service';
 import { IpacService, SetorIPAC } from '../services/ipac.service';
-import { SimulationService, SimulationResult, SensitivityResult, Cenario } from '../services/simulation.service';
+import { SimulationService, SimulationResult, SensitivityResult, Cenario, SimulationInput } from '../services/simulation.service';
+import { BIBLIOTECA_SOLUCOES } from '../constants/solucoes-simulacao';
 
 @Component({
   selector: 'app-analytics',
@@ -106,10 +107,18 @@ export class AnalyticsComponent implements OnInit {
   // Simulation
   selectedSetorIndex = 0;
   cenario: Cenario = 'medio';
-  simInput = {
-    aumentoCoberturaArborea: 15, reducaoImpermeabilizacao: 10, aumentoAreaVerde: 10,
-    telhadosVerdes: 10, telhadosFrios: 20, pavimentosFrios: 15
-  };
+  
+  // Estado dinâmico lido iterativamente da constante
+  simInput: SimulationInput = BIBLIOTECA_SOLUCOES.reduce((acc, sol) => ({ ...acc, [sol.id]: 0 }), {});
+  
+  get solucoesCalor() { return BIBLIOTECA_SOLUCOES.filter(s => s.eixo_principal === 'calor'); }
+  get solucoesAgua() { return BIBLIOTECA_SOLUCOES.filter(s => s.eixo_principal === 'agua'); }
+  get solucoesQualidade() { return BIBLIOTECA_SOLUCOES.filter(s => s.eixo_principal === 'qualidade_urbana'); }
+
+  openAccordion: string | null = 'calor';
+  toggleAccordion(eixo: string) {
+    this.openAccordion = this.openAccordion === eixo ? null : eixo;
+  }
   simResult: SimulationResult | null = null;
   investimentoSimulacao: number | null = null;
   investimentoFormatado = '';
@@ -121,18 +130,22 @@ export class AnalyticsComponent implements OnInit {
   onInvestimentoChange(value: string) {
     if (!value) {
       this.investimentoSimulacao = null;
-      this.investimentoFormatado = '';
+      this.investimentoFormatado = "";
       this.runSimulation();
       return;
     }
-    const numbers = value.replace(/\D/g, '');
-    if (!numbers) {
+    // Extrai apenas dígitos e limita a 12 chars (R$ 9.999.999.999,99)
+    const digits = value.replace(/\D/g, "").slice(0, 12);
+    if (!digits) {
       this.investimentoSimulacao = null;
-      this.investimentoFormatado = '';
+      this.investimentoFormatado = "";
     } else {
-      const numberValue = parseInt(numbers, 10);
-      this.investimentoSimulacao = numberValue / 100;
-      this.investimentoFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(this.investimentoSimulacao);
+      const centavos = parseInt(digits, 10);
+      this.investimentoSimulacao = centavos / 100;
+      this.investimentoFormatado = new Intl.NumberFormat("pt-BR", {
+        style: "currency", currency: "BRL",
+        minimumFractionDigits: 2, maximumFractionDigits: 2
+      }).format(this.investimentoSimulacao);
     }
     this.runSimulation();
   }
@@ -381,7 +394,8 @@ export class AnalyticsComponent implements OnInit {
     if (this.setoresIPAC.length === 0) return;
     const setor = this.setoresIPAC[this.selectedSetorIndex];
     if (this.investimentoSimulacao && this.investimentoSimulacao > 0) {
-      this.simInput = this.simService.calcularIntervencoesPorInvestimento(this.investimentoSimulacao);
+      const areaSetor = setor.area_total_m2 || 1000000;
+      this.simInput = this.simService.calcularIntervencoesPorInvestimento(this.investimentoSimulacao, areaSetor);
     }
     this.simResult = this.simService.simulateThermal(setor, this.simInput, this.cenario);
 
@@ -408,38 +422,50 @@ export class AnalyticsComponent implements OnInit {
   // ---- Optimization Assistant ----
   setOptimizationGoal(goal: 'cooling' | 'drainage' | 'balance') {
     this.activeGoal = goal;
+    // Reinicia tudo a zero
+    const base: SimulationInput = BIBLIOTECA_SOLUCOES.reduce((acc, sol) => ({ ...acc, [sol.id]: 0 }), {});
+
     if (goal === 'cooling') {
       this.goalMessage = 'Foco Térmico: Priorizando Cobertura Arbórea densa e Telhados Frios para mitigar agressivamente as Ilhas de Calor.';
       this.cenario = 'agressivo';
       this.simInput = {
-        aumentoCoberturaArborea: 40,
-        aumentoAreaVerde: 15,
-        reducaoImpermeabilizacao: 10,
-        telhadosVerdes: 20,
-        telhadosFrios: 60,
-        pavimentosFrios: 30
+        ...base,
+        cobertura_arborea: 40,
+        area_verde: 15,
+        desimpermeabilizacao: 10,
+        telhado_verde: 20,
+        telhado_frio: 60,
+        pavimento_frio: 30,
+        parede_verde: 15
       };
     } else if (goal === 'drainage') {
-      this.goalMessage = 'Foco Hídrico: Focando na desimpermeabilização drástica e Telhados Verdes pesados para reter grandes volumes de águas pluviais.';
+      this.goalMessage = 'Foco Hídrico: Focando na desimpermeabilização drástica e infraestrutura verde para reter grandes volumes de águas pluviais.';
       this.cenario = 'agressivo';
       this.simInput = {
-        aumentoCoberturaArborea: 15,
-        aumentoAreaVerde: 30,
-        reducaoImpermeabilizacao: 40,
-        telhadosVerdes: 45,
-        telhadosFrios: 10,
-        pavimentosFrios: 10
+        ...base,
+        cobertura_arborea: 15,
+        area_verde: 30,
+        desimpermeabilizacao: 40,
+        telhado_verde: 45,
+        jardim_de_chuva: 30,
+        biovaleta: 25,
+        pavimento_permeavel: 30,
+        bacia_retencao: 20
       };
     } else {
       this.goalMessage = 'Foco Custo-Benefício: Distribuição harmônica equilibrando redução térmica eficiente e ganho hídrico seguro, modelo intermediário.';
       this.cenario = 'medio';
       this.simInput = {
-        aumentoCoberturaArborea: 25,
-        aumentoAreaVerde: 20,
-        reducaoImpermeabilizacao: 25,
-        telhadosVerdes: 30,
-        telhadosFrios: 40,
-        pavimentosFrios: 20
+        ...base,
+        cobertura_arborea: 25,
+        area_verde: 20,
+        desimpermeabilizacao: 25,
+        telhado_verde: 30,
+        telhado_frio: 40,
+        pavimento_frio: 20,
+        jardim_de_chuva: 15,
+        parques_lineares: 15,
+        pavimento_permeavel: 15
       };
     }
     this.runSimulation();
