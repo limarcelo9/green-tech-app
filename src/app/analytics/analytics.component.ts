@@ -65,12 +65,18 @@ export class AnalyticsComponent implements OnInit {
         .filter(s => s.isAnomalia)
         .sort((a, b) => (b.lst_p90 || 0) - (a.lst_p90 || 0))[0];
 
+      if (critical) {
+        // Sincroniza o seletor (combo) com a anomalia detectada
+        this.selectedSetorIndex = this.setoresIPAC.findIndex(s => s.id_ra === critical.id_ra);
+        this.runSimulation(); // Atualiza indicadores técnicos imediatamente
+      }
+
       setTimeout(() => {
         if (this.map) {
           if (critical && critical.lat && critical.lng) {
             this.map.setView([critical.lat, critical.lng], 16);
           }
-          this.updateAnomalyMarkers();
+          this.updateAnomalyMarkers(); // Atualiza camadas, incluindo o novo sonar geográfico
         }
       }, 400);
     } else {
@@ -89,7 +95,11 @@ export class AnalyticsComponent implements OnInit {
   setTab(tab: 'ipac' | 'simulation' | 'sensitivity' | 'indicators') {
     this.activeTab = tab;
     if (tab === 'simulation') {
-      setTimeout(() => this.initMap(), 100);
+      setTimeout(() => {
+        this.initMap();
+        // Garantia extra para o novo layout Full Width v2.5
+        this.map?.invalidateSize();
+      }, 300);
     }
   }
 
@@ -199,7 +209,19 @@ export class AnalyticsComponent implements OnInit {
     if (!this.map || !this.anomalyLayerGroup) return;
     this.anomalyLayerGroup.clearLayers();
 
-    if (this.showOnlyAnomalies) {
+    if (this.showOnlyAnomalies || this.setoresIPAC[this.selectedSetorIndex]?.isAnomalia) {
+      const selectedSetor = this.setoresIPAC[this.selectedSetorIndex];
+      
+      // Sonar Geo-Precisão: 10km de raio real no mapa
+      if (selectedSetor && selectedSetor.isAnomalia && selectedSetor.lat && selectedSetor.lng) {
+        L.circle([selectedSetor.lat, selectedSetor.lng], {
+          radius: 10000, 
+          className: "sonar-geocircle",
+          interactive: false
+        }).addTo(this.anomalyLayerGroup);
+      }
+
+      // Mantém os radares individuais para todas as anomalias detectadas
       const anomalies = this.setoresIPAC.filter(s => s.isAnomalia);
       anomalies.forEach(s => {
         if (s.lat && s.lng) {
@@ -367,6 +389,10 @@ export class AnalyticsComponent implements OnInit {
     if (setor.lat && setor.lng && this.map) {
       this.onMapClick(setor.lat, setor.lng);
       this.map.setView([setor.lat, setor.lng], 13);
+      this.updateAnomalyMarkers(); // Sincroniza o Sonar 10km com a seleção atual
+      
+      // Delay para garantir que o container full-width já esteja estabilizado
+      setTimeout(() => this.map?.invalidateSize(), 150);
     }
   }
 

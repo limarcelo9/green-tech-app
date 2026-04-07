@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SetorIPAC } from './ipac.service';
+import { SolucaoSimulacao, BIBLIOTECA_SOLUCOES, CenarioSimulacao } from '../constants/solucoes-simulacao';
 
 export interface SimulationInput {
     // Soluções baseadas na natureza
@@ -26,6 +27,45 @@ export interface SimulationResult {
     cnSimulado: number;
     // Energia
     reducaoEnergia: number;
+    // Financeiro (v2.2)
+    financeiro: SimulationCost;
+    // SROI (v2.3)
+    sroi: SimulationSROI;
+}
+
+export interface SimulationSROI {
+    economiaSaudeAnual: number;
+    economiaEnergiaAnual: number;
+    economiaInfraAnual: number;
+    economiaTotalAnual: number;
+    paybackAnos: number;
+    sroiRatio: number; // Benefício Total (10 anos) / Custo Inicial em ROI pura
+    labelPayback: string;
+}
+
+export interface SolutionCost {
+    id: string;
+    nome: string;
+    areaIntervencao: number;
+    unidade: string;
+    custoUnitario: number;
+    custoTotal: number;
+    eixo: string;
+    eficiencia: number; // Impacto (deltaLST ou sim) / Custo
+}
+
+export interface SimulationCost {
+    custoTotal: number;
+    detalhePorSolucao: SolutionCost[];
+    custoPorEixo: Record<string, number>;
+    rankingTermico: SolutionCost[];
+    rankingHidrico: SolutionCost[];
+    rankingComposto: SolutionCost[];
+    // Rastreabilidade (v2.3)
+    area_setor_real: number | null;
+    area_setor_utilizada: number;
+    area_fonte: "metadata" | "fallback_padrao";
+    isEstimativo: boolean;
 }
 
 export interface SensitivityResult {
@@ -42,96 +82,125 @@ export type Cenario = 'conservador' | 'medio' | 'agressivo';
 @Injectable({ providedIn: 'root' })
 export class SimulationService {
 
+    public readonly bibliotecaSolucoes = BIBLIOTECA_SOLUCOES;
+
     // ============================================================
     // Coeficientes paramétricos baseados em literatura
     // Fontes: WRI Brasil (2025), EPA, Oke (2017), USDA TR-55
     // ============================================================
 
-    // -- Arborização: cada 1% cobertura dossel → redução LST --
-    // Ziter et al. (2019): 10% dossel → -0.5 a -1.2°C
-    // WRI: sombra arbórea → -25°C superfície vs asfalto exposto
-    private readonly treeCanopyEffect: Record<Cenario, number> = {
-        conservador: 0.04,
-        medio: 0.07,
-        agressivo: 0.12
-    };
+    // O serviço agora utiliza a BIBLIOTECA_SOLUCOES para todos os coeficientes de impacto.
+    // As propriedades privadas redundantes foram removidas.
 
-    // -- Impermeabilização: cada 1% redução → redução LST --
-    // EPA Cool Pavements (2008)
-    private readonly impermLSTEffect: Record<Cenario, number> = {
-        conservador: 0.02,
-        medio: 0.04,
-        agressivo: 0.06
-    };
-
-    // -- Telhados Verdes: cada 1% de cobertura → redução LST --
-    // WRI: resfriamento evaporativo + isolamento térmico
-    // Sailor et al. (2012): telhados verdes extensivos → -0.3 a -2°C LST local
-    private readonly greenRoofEffect: Record<Cenario, number> = {
-        conservador: 0.02,
-        medio: 0.04,
-        agressivo: 0.06
-    };
-
-    // -- Telhados Frios (reflexivos): cada 1% cobertura → redução LST --
-    // WRI/Phoenix: tratamento reflexivo → -7°C LST de superfície
-    // Malásia: telhados brancos → -13% consumo energia
-    // Akbari et al. (2001): albedo +0.1 → -0.3°C ar
-    private readonly coolRoofEffect: Record<Cenario, number> = {
-        conservador: 0.03,
-        medio: 0.06,
-        agressivo: 0.09
-    };
-
-    // -- Pavimentos Frios: cada 1% das vias → redução LST --
-    // WRI/Phoenix: -7°C LST com tratamentos reflexivos
-    // EPA: albedo asfalto 0.05-0.10 → permeável 0.15-0.35
-    private readonly coolPavementEffect: Record<Cenario, number> = {
-        conservador: 0.03,
-        medio: 0.05,
-        agressivo: 0.08
-    };
-
-    // -- Conforto térmico: cada 1°C de redução LST → % melhoria --
-    // Höppe (1999): PET, cada 1°C ≈ 3-6% conforto
     private readonly comfortPerDegree: Record<Cenario, number> = {
         conservador: 2.5,
         medio: 4.0,
         agressivo: 6.0
     };
 
-    // -- Redução de energia: por % de telhado frio --
-    // WRI/Malásia: telhados brancos → -13% energia
-    private readonly energyReductionPerCoolRoof: Record<Cenario, number> = {
-        conservador: 0.10,
-        medio: 0.16,
-        agressivo: 0.22
+    // Coeficientes SROI (Real-world based benchmarks)
+    private readonly SROI_COEFFS = {
+        saude_por_hab_grau: 1250, // R$ salvos por habitante/ano por 1°C reduzido
+        energia_kwh_preco: 0.95,  // R$ por kWh médio
+        infra_dano_enchente_km2: 1500000, // R$ economia em danos por km2 (100% redução escoamento)
+        ciclo_vida_anos: 10,
+        taxa_desconto: 0.05
     };
 
-    // -- SCS-CN --
     private readonly cnImpervious = 98;
     private readonly cnGreenArea = 61;
 
-    simulateThermal(setor: SetorIPAC, input: SimulationInput, cenario: Cenario): SimulationResult {
-        // === THERMAL ===
-        const deltaArvores = -(input.aumentoCoberturaArborea * this.treeCanopyEffect[cenario]);
-        const deltaImperm = -(input.reducaoImpermeabilizacao * this.impermLSTEffect[cenario]);
-        const deltaTelhadoVerde = -(input.telhadosVerdes * this.greenRoofEffect[cenario]);
-        const deltaTelhadoFrio = -(input.telhadosFrios * this.coolRoofEffect[cenario]);
-        const deltaPavFrio = -(input.pavimentosFrios * this.coolPavementEffect[cenario]);
+    /**
+     * Calcula o delta acumulado para um indicador específico baseado no input e cenário
+     */
+    private calcularDelta(indicador: string, cenario: CenarioSimulacao, input: SimulationInput): number {
+        let deltaTotal = 0;
 
-        const deltaLST = deltaArvores + deltaImperm + deltaTelhadoVerde + deltaTelhadoFrio + deltaPavFrio;
+        // Mapa de De/Para: Propriedades do Input legado -> IDs da Biblioteca
+        const mapaInput = {
+            aumentoCoberturaArborea: "cobertura_arborea",
+            aumentoAreaVerde: "area_verde",
+            reducaoImpermeabilizacao: "desimpermeabilizacao",
+            telhadosVerdes: "telhado_verde",
+            telhadosFrios: "telhado_frio",
+            pavimentosFrios: "pavimento_frio"
+        };
+
+        this.bibliotecaSolucoes.forEach(solucao => {
+            // Verifica se a solução está no input e tem percentual > 0
+            let percentual = 0;
+            Object.entries(mapaInput).forEach(([prop, id]) => {
+                if (id === solucao.id) {
+                    percentual = (input as any)[prop] || 0;
+                }
+            });
+
+            // Se não for legada, pode vir de um campo dinâmico no futuro (ex: input.adicionais[id])
+            // Implementação futura: percentual = input.intervencoes[solucao.id] || percentual;
+
+            if (percentual > 0) {
+                const impacto = solucao.impactos.find(i => i.indicador === indicador);
+                if (impacto) {
+                    const fator = impacto.fatores[cenario];
+                    // Deltas de LST são negativos (redução), Infiltração é positivo (aumento), etc.
+                    // Padronizamos: se for LST/Escoamento/Energia, o fator é multiplicador de redução (-)
+                    // Se for Infiltração/Conforto, o fator é multiplicador de aumento (+)
+                    const multiplicador = (indicador === "lst" || indicador === "escoamento" || indicador === "energia") ? -1 : 1;
+                    deltaTotal += (percentual * fator * multiplicador);
+                }
+            }
+        });
+
+        return deltaTotal;
+    }
+
+    simulateThermal(setor: SetorIPAC, input: SimulationInput, cenario: Cenario): SimulationResult {
+        // === REGRA DE NÃO-SOBREPOSIÇÃO (v2.1) ===
+        // Evita dupla contagem hídrica entre Área Verde e Desimpermeabilização
+        const originalInput = { ...input };
+        const somaSuperficie = input.aumentoAreaVerde + input.reducaoImpermeabilizacao;
+        const TETO_SUPERFICIE = 40; // Limite prático de 40% para estas intervenções combinadas
+
+        if (somaSuperficie > TETO_SUPERFICIE) {
+            const fatorAbatimento = TETO_SUPERFICIE / somaSuperficie;
+            input.aumentoAreaVerde *= fatorAbatimento;
+            input.reducaoImpermeabilizacao *= fatorAbatimento;
+        }
+
+        // === NOVO MOTOR DINÂMICO ===
+        const cenarioSim = cenario as CenarioSimulacao;
+        const deltaLST = this.calcularDelta("lst", cenarioSim, input);
+        const reducaoEnergia = Math.abs(this.calcularDelta("energia", cenarioSim, input));
+        
+        // Conforto térmico: cada 1°C de redução LST ≈ 4% melhoria (médio)
         const deltaConfortoTermico = Math.abs(deltaLST) * this.comfortPerDegree[cenario];
         const lstSimulado = setor.lst_p90 + deltaLST;
 
-        const contribuicoes = [
-            { nome: '🌳 Arborização', delta: +deltaArvores.toFixed(2), cor: '#16a34a' },
-            { nome: '🏗️ Desimpermeab.', delta: +deltaImperm.toFixed(2), cor: '#0284c7' },
-            { nome: '🌿 Telhado Verde', delta: +deltaTelhadoVerde.toFixed(2), cor: '#15803d' },
-            { nome: '🏠 Telhado Frio', delta: +deltaTelhadoFrio.toFixed(2), cor: '#7c3aed' },
-            { nome: '🛣️ Pavimento Frio', delta: +deltaPavFrio.toFixed(2), cor: '#9333ea' },
-        ].map(c => ({ ...c, delta: parseFloat(c.delta as any) }))
-            .filter(c => c.delta !== 0);
+        // Contribuições dinâmicas para o gráfico
+        const contribuicoes = this.bibliotecaSolucoes
+            .map(sol => {
+                const imp = sol.impactos.find(i => i.indicador === "lst");
+                if (!imp) return null;
+                
+                // Mapeamento de percentual (mesma lógica do calcularDelta)
+                const mapaInput: any = {
+                    aumentoCoberturaArborea: "cobertura_arborea",
+                    aumentoAreaVerde: "area_verde",
+                    reducaoImpermeabilizacao: "desimpermeabilizacao",
+                    telhadosVerdes: "telhado_verde",
+                    telhadosFrios: "telhado_frio",
+                    pavimentosFrios: "pavimento_frio"
+                };
+                let p = 0;
+                Object.entries(mapaInput).forEach(([prop, id]) => {
+                    if (id === sol.id) p = (input as any)[prop] || 0;
+                });
+
+                if (p === 0) return null;
+                const d = -(p * imp.fatores[cenarioSim]);
+                return { nome: sol.nome, delta: +d.toFixed(2), cor: this.getCorEixo(sol.eixo_principal) };
+            })
+            .filter((c): c is { nome: string; delta: number; cor: string } => c !== null && c.delta !== 0);
 
         // === HYDROLOGICAL (SCS-CN) ===
         const impermOriginal = setor.impermeabilizacao_pct / 100;
@@ -150,8 +219,13 @@ export class SimulationService {
         const reducaoEscoamento = runoffOrig > 0 ? ((runoffOrig - runoffSim) / runoffOrig) * 100 : 0;
         const aumentoInfiltracao = reducaoEscoamento * 0.7;
 
-        // === ENERGIA ===
-        const reducaoEnergia = input.telhadosFrios * this.energyReductionPerCoolRoof[cenario] / 100 * 100; // % de telhado × efeito
+        // === ENERGIA (Calculado dinamicamente acima) ===
+
+        // === FINANCEIRO (v2.3) ===
+        const financeiro = this.calcularCustos(setor, input, cenarioSim, deltaLST, reducaoEscoamento);
+
+        // === SROI (v2.4) ===
+        const sroi = this.calcularSROI(setor, financeiro, deltaLST, reducaoEscoamento, reducaoEnergia);
 
         return {
             deltaLST: +deltaLST.toFixed(2),
@@ -163,7 +237,162 @@ export class SimulationService {
             cnOriginal: +cnOriginal.toFixed(0),
             cnSimulado: +cnSimulado.toFixed(0),
             reducaoEnergia: +Math.min(reducaoEnergia, 30).toFixed(1),
+            financeiro,
+            sroi
         };
+    }
+
+    private calcularCustos(setor: SetorIPAC, input: SimulationInput, cenario: CenarioSimulacao, deltaLST: number, reducaoEscoam: number): SimulationCost {
+        const AREA_FALLBACK = 1000000; // 1km2 de fallback
+        const areaReal = setor.area_total_m2 || null;
+        const areaUtilizada = areaReal || AREA_FALLBACK;
+        const areaFonte = areaReal ? "metadata" : "fallback_padrao";
+        const isEstimativo = areaFonte === "fallback_padrao";
+
+        const detalhePorSolucao: SolutionCost[] = [];
+        const custoPorEixo: Record<string, number> = { calor: 0, agua: 0, qualidade_urbana: 0 };
+
+        const mapaInput = {
+            aumentoCoberturaArborea: "cobertura_arborea",
+            aumentoAreaVerde: "area_verde",
+            reducaoImpermeabilizacao: "desimpermeabilizacao",
+            telhadosVerdes: "telhado_verde",
+            telhadosFrios: "telhado_frio",
+            pavimentosFrios: "pavimento_frio"
+        };
+
+        this.bibliotecaSolucoes.forEach(sol => {
+            let percentual = 0;
+            Object.entries(mapaInput).forEach(([prop, id]) => {
+                if (id === sol.id) percentual = (input as any)[prop] || 0;
+            });
+
+            if (percentual > 0) {
+                // Cálculo da área de intervenção (m2 ou similar)
+                // Usamos o percentual aplicado sobre a área utilizada do setor
+                const areaIntervencao = (percentual / 100) * areaUtilizada;
+                
+                // Se for unidade, dividimos pela area_equivalente para saber o N de unidades (estimado)
+                // Mas o custo é sempre m2 * valor ou (m2/equivalente) * valor_unidade
+                let custoTotal = 0;
+                if (sol.unidade === "unidade" && sol.area_equivalente) {
+                    const numUnidades = areaIntervencao / sol.area_equivalente;
+                    custoTotal = numUnidades * (sol.custo_unitario || 0);
+                } else {
+                    custoTotal = areaIntervencao * (sol.custo_unitario || 0);
+                }
+                
+                custoTotal *= sol.fator_regional;
+
+                // Cálculo de Eficiências Normalizadas
+                // Térmico: Impacto Unitário * Fator Real / Custo
+                const impTermico = sol.impactos.find(i => i.indicador === "lst")?.fatores[cenario] || 0;
+                const impHidrico = sol.impactos.find(i => i.indicador === "escoamento")?.fatores[cenario] || 0;
+
+                const solCost: SolutionCost = {
+                    id: sol.id,
+                    nome: sol.nome,
+                    areaIntervencao: +areaIntervencao.toFixed(0),
+                    unidade: sol.unidade,
+                    custoUnitario: sol.custo_unitario || 0,
+                    custoTotal: +custoTotal.toFixed(0),
+                    eixo: sol.eixo_principal,
+                    eficiencia: 0 // Será preenchido nos rankings específicos
+                };
+
+                // Injetamos métricas brutas para o ranking final
+                (solCost as any)._rawImpT = impTermico;
+                (solCost as any)._rawImpH = impHidrico;
+
+                detalhePorSolucao.push(solCost);
+                custoPorEixo[sol.eixo_principal] += custoTotal;
+            }
+        });
+
+        const custoTotalGeral = Object.values(custoPorEixo).reduce((a, b) => a + b, 0);
+
+        // Ranking Térmico (Focado no eixo Calor)
+        const rankingTermico = detalhePorSolucao
+            .map(s => ({ ...s, eficiencia: s.custoTotal > 0 ? (s as any)._rawImpT / (s.custoTotal / 1000) : 0 }))
+            .sort((a, b) => b.eficiencia - a.eficiencia);
+
+        // Ranking Hídrico (Focado no eixo Água)
+        const rankingHidrico = detalhePorSolucao
+            .map(s => ({ ...s, eficiencia: s.custoTotal > 0 ? (s as any)._rawImpH / (s.custoTotal / 1000) : 0 }))
+            .sort((a, b) => b.eficiencia - a.eficiencia);
+
+        // Ranking Composto (Normalizado: Calor + Água + Social)
+        // Normalização simplificada: Médias dos indicadores normalizados por 10.000m2 de custo
+        const rankingComposto = detalhePorSolucao
+            .map(s => {
+                const scoreSROI = ((s as any)._rawImpT * 10) + (s as any)._rawImpH; 
+                return { ...s, eficiencia: s.custoTotal > 0 ? scoreSROI / (s.custoTotal / 1000) : 0 };
+            })
+            .sort((a, b) => b.eficiencia - a.eficiencia);
+
+        return {
+            custoTotal: +custoTotalGeral.toFixed(0),
+            detalhePorSolucao,
+            custoPorEixo,
+            rankingTermico,
+            rankingHidrico,
+            rankingComposto,
+            area_setor_real: areaReal,
+            area_setor_utilizada: areaUtilizada,
+            area_fonte: areaFonte,
+            isEstimativo
+        };
+    }
+
+    private calcularSROI(setor: SetorIPAC, financ: SimulationCost, deltaLST: number, redEscoam: number, redEnergia: number): SimulationSROI {
+        const areaKM2 = financ.area_setor_utilizada / 1000000;
+        const totalPop = areaKM2 * (setor.densidade_pop || 50); // Fallback pop se for mudo
+        
+        // 1. Economia Saúde (Proporcional à população e vulnerabilidade P)
+        const pesoVulnerabilidade = (setor.modulo_p / 50); // Mais vulnerável = mais ganho SROI
+        const economiaSaudeAnual = Math.abs(deltaLST) * totalPop * this.SROI_COEFFS.saude_por_hab_grau * pesoVulnerabilidade;
+
+        // 2. Economia Energia
+        // Estima-se 500kWh/ano p/ m2 de telhado condicionado. Preço real R$ 0.95
+        const areaTelhadosIntervencao = financ.detalhePorSolucao
+            .filter(s => s.eixo === 'qualidade_urbana' || s.id.includes('telhado'))
+            .reduce((acc, val) => acc + val.areaIntervencao, 0);
+        
+        const economiaEnergiaAnual = (redEnergia / 100) * areaTelhadosIntervencao * 50 * this.SROI_COEFFS.energia_kwh_preco;
+
+        // 3. Economia Infra (Redução de danos por alagamentos)
+        const economiaInfraAnual = (redEscoam / 100) * areaKM2 * this.SROI_COEFFS.infra_dano_enchente_km2;
+
+        const economiaTotalAnual = economiaSaudeAnual + economiaEnergiaAnual + economiaInfraAnual;
+        
+        // Payback e ROI
+        let paybackAnos = economiaTotalAnual > 0 ? financ.custoTotal / economiaTotalAnual : 99;
+        const benefTotal10Anos = economiaTotalAnual * this.SROI_COEFFS.ciclo_vida_anos;
+        const sroiRatio = financ.custoTotal > 0 ? benefTotal10Anos / financ.custoTotal : 0;
+
+        let labelPayback = "Excelente";
+        if (paybackAnos > 15) labelPayback = "Longo Prazo";
+        else if (paybackAnos > 8) labelPayback = "Moderado";
+        else if (paybackAnos < 4) labelPayback = "Altíssimo Impacto";
+
+        return {
+            economiaSaudeAnual: +economiaSaudeAnual.toFixed(0),
+            economiaEnergiaAnual: +economiaEnergiaAnual.toFixed(0),
+            economiaInfraAnual: +economiaInfraAnual.toFixed(0),
+            economiaTotalAnual: +economiaTotalAnual.toFixed(0),
+            paybackAnos: +paybackAnos.toFixed(1),
+            sroiRatio: +sroiRatio.toFixed(2),
+            labelPayback
+        };
+    }
+
+    private getCorEixo(eixo: string): string {
+        switch (eixo) {
+            case 'calor': return '#e11d48'; // Rose 600
+            case 'agua': return '#0284c7'; // Sky 600
+            case 'qualidade_urbana': return '#16a34a'; // Green 600
+            default: return '#4b5563';
+        }
     }
 
     private calcRunoff(cn: number): number {
