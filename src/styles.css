@@ -3,3 +3,29 @@
 @tailwind utilities;
 
 /* You can add global styles to this file, and also import other style files */
+
+/* ======= GLOBAL PREMIUM SCROLLBARS ======= */
+/* Estilização moderna e fina "estilo macOS" para toda a aplicação */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #374151; /* Tailwind gray-700 */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #10b981; /* Tailwind emerald-500 */
+}
+
+/* Firefox scrollbar (padrões limitados) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #374151 transparent;
+}
