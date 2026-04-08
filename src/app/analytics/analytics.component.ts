@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from "@angular/core";
+import { Component, OnInit, inject, NgZone } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
@@ -21,6 +21,7 @@ export class AnalyticsComponent implements OnInit {
   dataService = inject(MockDataService);
   ipacService = inject(IpacService);
   simService = inject(SimulationService);
+  private zone = inject(NgZone);
  
    showIntegrityDetails = false;
   selectedCityName = "Brasília";
@@ -213,22 +214,89 @@ export class AnalyticsComponent implements OnInit {
     this.drawnItems = new L.FeatureGroup();
     this.map.addLayer(this.drawnItems);
 
-    // Leaflet Draw Controls
+    // ======= Tradução Leaflet Draw para PT-BR =======
+    const drawLocal = (L as any).drawLocal;
+    drawLocal.draw.toolbar.actions = { title: "Cancelar desenho", text: "Cancelar" };
+    drawLocal.draw.toolbar.finish = { title: "Finalizar desenho", text: "Finalizar" };
+    drawLocal.draw.toolbar.undo = { title: "Desfazer último ponto", text: "Desfazer" };
+    drawLocal.draw.toolbar.buttons = {
+      polyline: "Régua — Medir distância",
+      polygon: "Desenhar polígono",
+      rectangle: "Desenhar retângulo",
+      circle: "Desenhar círculo",
+      marker: "Adicionar marcador",
+      circlemarker: "Marcador circular"
+    };
+    drawLocal.draw.handlers.circle = {
+      tooltip: { start: "Clique e arraste para desenhar o círculo." },
+      radius: "Raio"
+    };
+    drawLocal.draw.handlers.polygon = {
+      tooltip: {
+        start: "Clique para começar a desenhar.",
+        cont: "Clique para continuar desenhando.",
+        end: "Clique no primeiro ponto para fechar."
+      }
+    };
+    drawLocal.draw.handlers.polyline = {
+      tooltip: {
+        start: "Clique para iniciar a medição.",
+        cont: "Clique para continuar medindo.",
+        end: "Clique no último ponto para finalizar."
+      },
+      error: "<strong>Erro:</strong> linhas não podem se cruzar!"
+    };
+    drawLocal.draw.handlers.rectangle.tooltip = {
+      start: "Clique e arraste para desenhar o retângulo."
+    };
+    drawLocal.draw.handlers.simpleshape = {
+      tooltip: { end: "Solte o mouse para finalizar." }
+    };
+    drawLocal.edit.toolbar.actions = {
+      save: { title: "Salvar alterações", text: "Salvar" },
+      cancel: { title: "Cancelar edição", text: "Cancelar" },
+      clearAll: { title: "Limpar tudo", text: "Limpar" }
+    };
+    drawLocal.edit.toolbar.buttons = {
+      edit: "Editar formas",
+      editDisabled: "Sem formas para editar",
+      remove: "Apagar formas",
+      removeDisabled: "Sem formas para apagar"
+    };
+    drawLocal.edit.handlers.edit.tooltip = {
+      text: "Arraste pontos para editar.",
+      subtext: "Clique em cancelar para desfazer."
+    };
+    drawLocal.edit.handlers.remove.tooltip = {
+      text: "Clique numa forma para removê-la."
+    };
+
+    // ======= Draw Controls =======
     this.drawControl = new (L as any).Control.Draw({
       position: "topright",
       draw: {
+        polyline: {
+          metric: true,
+          feet: false,
+          shapeOptions: { color: "#f59e0b", weight: 3, dashArray: "10, 5" }
+        },
         polygon: {
           allowIntersection: false,
           showArea: true,
+          metric: true,
+          feet: false,
           shapeOptions: { color: "#10b981", weight: 2, fillOpacity: 0.15 }
         },
         circle: {
+          metric: true,
+          feet: false,
           shapeOptions: { color: "#3b82f6", weight: 2, fillOpacity: 0.1 }
         },
         rectangle: {
+          metric: true,
+          feet: false,
           shapeOptions: { color: "#a855f7", weight: 2, fillOpacity: 0.1 }
         },
-        polyline: false,
         marker: false,
         circlemarker: false
       },
@@ -239,15 +307,15 @@ export class AnalyticsComponent implements OnInit {
     });
     this.map.addControl(this.drawControl);
 
-    // Draw Events
+    // ======= Draw Events (NgZone para Angular detectar mudanças) =======
     this.map.on((L as any).Draw.Event.CREATED, (e: any) => {
       const layer = e.layer;
       this.drawnItems.addLayer(layer);
-      this.onShapeDrawn(layer, e.layerType);
+      this.zone.run(() => this.onShapeDrawn(layer, e.layerType));
     });
 
     this.map.on((L as any).Draw.Event.DELETED, () => {
-      this.closeMeasurePanel();
+      this.zone.run(() => this.closeMeasurePanel());
     });
 
     this.updateMainMarker();
