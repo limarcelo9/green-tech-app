@@ -616,29 +616,64 @@ export class AnalyticsComponent implements OnInit {
   // ---- Map Drawing / Measurement ----
   onShapeDrawn(layer: any, layerType: string) {
     let areaM2 = 0;
+    let distanciaM = 0;
+    const isLine = layerType === "polyline";
 
-    if (layerType === "circle") {
+    if (isLine) {
+      // Régua: calcular distância total
+      const latlngs: L.LatLng[] = layer.getLatLngs();
+      for (let i = 1; i < latlngs.length; i++) {
+        distanciaM += latlngs[i - 1].distanceTo(latlngs[i]);
+      }
+    } else if (layerType === "circle") {
       const radius = layer.getRadius();
       areaM2 = Math.PI * radius * radius;
     } else if (layerType === "polygon" || layerType === "rectangle") {
-      // Geodesic area via Leaflet
       const latlngs = layer.getLatLngs()[0];
       areaM2 = Math.abs((L as any).GeometryUtil?.geodesicArea(latlngs) || this.calcPolygonArea(latlngs));
     }
 
-    this.measuredArea = +areaM2.toFixed(0);
-    this.measuredSuggestions = this.calcSugestoes(areaM2);
-    this.showMeasurePanel = true;
-
     // Popup no shape
-    const center = layer.getBounds ? layer.getBounds().getCenter() : layer.getLatLng();
-    L.popup({ className: "measure-popup" })
-      .setLatLng(center)
-      .setContent(`<div class="p-2 text-center">
-        <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">📐 Área Medida</p>
-        <p class="text-lg font-black text-white">${this.measuredArea?.toLocaleString("pt-BR")} m²</p>
-      </div>`)
-      .openOn(this.map!);
+    let popupCenter: L.LatLng;
+    if (layer.getBounds) {
+      popupCenter = layer.getBounds().getCenter();
+    } else {
+      popupCenter = layer.getLatLng();
+    }
+
+    if (isLine) {
+      // Régua: mostrar distância
+      const distFormatada = distanciaM >= 1000
+        ? `${(distanciaM / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 2 })} km`
+        : `${distanciaM.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} m`;
+
+      L.popup({ className: "measure-popup" })
+        .setLatLng(popupCenter)
+        .setContent(`<div style="padding:8px;text-align:center;">
+          <p style="font-size:10px;font-weight:800;color:#f59e0b;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:4px;">📏 Distância Medida</p>
+          <p style="font-size:18px;font-weight:900;color:white;">${distFormatada}</p>
+        </div>`)
+        .openOn(this.map!);
+
+      // Não mostra painel de sugestões para linha
+      this.showMeasurePanel = false;
+    } else {
+      // Área: mostrar área e sugestões
+      this.measuredArea = +areaM2.toFixed(0);
+      this.measuredSuggestions = this.calcSugestoes(areaM2);
+      this.showMeasurePanel = true;
+
+      const hectares = (areaM2 / 10000).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+
+      L.popup({ className: "measure-popup" })
+        .setLatLng(popupCenter)
+        .setContent(`<div style="padding:8px;text-align:center;">
+          <p style="font-size:10px;font-weight:800;color:#10b981;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:4px;">📐 Área Medida</p>
+          <p style="font-size:18px;font-weight:900;color:white;">${this.measuredArea?.toLocaleString("pt-BR")} m²</p>
+          <p style="font-size:9px;color:#9ca3af;margin-top:2px;">≈ ${hectares} hectares</p>
+        </div>`)
+        .openOn(this.map!);
+    }
   }
 
   private calcPolygonArea(latlngs: L.LatLng[]): number {
