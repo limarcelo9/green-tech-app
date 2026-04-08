@@ -20,6 +20,7 @@ export interface RAraw {
     percentual_idosos: number;
     lat?: number;
     lng?: number;
+    area_total_m2?: number; // Área real do setor (v2.3)
 }
 
 export interface SetorIPAC extends RAraw {
@@ -266,7 +267,8 @@ export class IpacService {
                 renda_media: renda,
                 percentual_idosos: +(5 + this.seededRandom(seed + "-idoso") * 20).toFixed(1),
                 lat: baseLat + (this.seededRandom(seed + "-lat") - 0.5) * 0.1, 
-                lng: baseLng + (this.seededRandom(seed + "-lng") - 0.5) * 0.1
+                lng: baseLng + (this.seededRandom(seed + "-lng") - 0.5) * 0.1,
+                area_total_m2: Math.floor(500000 + this.seededRandom(seed + "-area") * 2500000) // Área entre 0.5km2 e 3km2
             });
         }
         return setores;
