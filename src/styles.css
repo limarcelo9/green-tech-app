@@ -50,3 +50,14 @@
   border-color: #10b981 !important;
   transform: scale(1.3);
 }
+
+/* ======= LEAFLET DRAW TOOLBAR TEXT FIX ======= */
+/* Esconde o texto descritivo injetado dentro da tag pela biblioteca para manter soh os icones */
+.leaflet-draw-toolbar a {
+  text-indent: -9999px !important;
+  color: transparent !important;
+}
+
+.leaflet-draw-toolbar .sr-only {
+  display: none !important;
+}
