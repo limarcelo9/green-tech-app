@@ -311,13 +311,13 @@ export class AnalyticsComponent implements OnInit {
     this.map.addControl(this.drawControl);
 
     // ======= Draw Events (NgZone para Angular detectar mudanças) =======
-    this.map.on((L as any).Draw.Event.CREATED, (e: any) => {
+    this.map.on('draw:created', (e: any) => {
       const layer = e.layer;
       this.drawnItems.addLayer(layer);
       this.zone.run(() => this.onShapeDrawn(layer, e.layerType));
     });
 
-    this.map.on((L as any).Draw.Event.DELETED, () => {
+    this.map.on('draw:deleted', () => {
       this.zone.run(() => this.closeMeasurePanel());
     });
 
