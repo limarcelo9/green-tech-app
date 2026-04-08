@@ -216,60 +216,63 @@ export class AnalyticsComponent implements OnInit {
 
     // ======= Tradução Leaflet Draw para PT-BR =======
     const drawLocal = (L as any).drawLocal;
-    drawLocal.draw.toolbar.actions = { title: "Cancelar desenho", text: "Cancelar" };
-    drawLocal.draw.toolbar.finish = { title: "Finalizar desenho", text: "Finalizar" };
-    drawLocal.draw.toolbar.undo = { title: "Desfazer último ponto", text: "Desfazer" };
-    drawLocal.draw.toolbar.buttons = {
-      polyline: "Régua — Medir distância",
-      polygon: "Desenhar polígono",
-      rectangle: "Desenhar retângulo",
-      circle: "Desenhar círculo",
-      marker: "Adicionar marcador",
-      circlemarker: "Marcador circular"
-    };
-    drawLocal.draw.handlers.circle = {
-      tooltip: { start: "Clique e arraste para desenhar o círculo." },
-      radius: "Raio"
-    };
-    drawLocal.draw.handlers.polygon = {
-      tooltip: {
-        start: "Clique para começar a desenhar.",
-        cont: "Clique para continuar desenhando.",
-        end: "Clique no primeiro ponto para fechar."
-      }
-    };
-    drawLocal.draw.handlers.polyline = {
-      tooltip: {
-        start: "Clique para iniciar a medição.",
-        cont: "Clique para continuar medindo.",
-        end: "Clique no último ponto para finalizar."
-      },
-      error: "<strong>Erro:</strong> linhas não podem se cruzar!"
-    };
-    drawLocal.draw.handlers.rectangle.tooltip = {
-      start: "Clique e arraste para desenhar o retângulo."
-    };
-    drawLocal.draw.handlers.simpleshape = {
-      tooltip: { end: "Solte o mouse para finalizar." }
-    };
-    drawLocal.edit.toolbar.actions = {
-      save: { title: "Salvar alterações", text: "Salvar" },
-      cancel: { title: "Cancelar edição", text: "Cancelar" },
-      clearAll: { title: "Limpar tudo", text: "Limpar" }
-    };
-    drawLocal.edit.toolbar.buttons = {
-      edit: "Editar formas",
-      editDisabled: "Sem formas para editar",
-      remove: "Apagar formas",
-      removeDisabled: "Sem formas para apagar"
-    };
-    drawLocal.edit.handlers.edit.tooltip = {
-      text: "Arraste pontos para editar.",
-      subtext: "Clique em cancelar para desfazer."
-    };
-    drawLocal.edit.handlers.remove.tooltip = {
-      text: "Clique numa forma para removê-la."
-    };
+    
+    if (drawLocal && drawLocal.draw && drawLocal.edit) {
+      drawLocal.draw.toolbar.actions = { title: "Cancelar desenho", text: "Cancelar" };
+      drawLocal.draw.toolbar.finish = { title: "Finalizar desenho", text: "Finalizar" };
+      drawLocal.draw.toolbar.undo = { title: "Desfazer último ponto", text: "Desfazer" };
+      drawLocal.draw.toolbar.buttons = {
+        polyline: "Régua — Medir distância",
+        polygon: "Desenhar polígono",
+        rectangle: "Desenhar retângulo",
+        circle: "Desenhar círculo",
+        marker: "Adicionar marcador",
+        circlemarker: "Marcador circular"
+      };
+      drawLocal.draw.handlers.circle = {
+        tooltip: { start: "Clique e arraste para desenhar o círculo." },
+        radius: "Raio"
+      };
+      drawLocal.draw.handlers.polygon = {
+        tooltip: {
+          start: "Clique para começar a desenhar.",
+          cont: "Clique para continuar desenhando.",
+          end: "Clique no primeiro ponto para fechar."
+        }
+      };
+      drawLocal.draw.handlers.polyline = {
+        tooltip: {
+          start: "Clique para iniciar a medição.",
+          cont: "Clique para continuar medindo.",
+          end: "Clique no último ponto para finalizar."
+        },
+        error: "<strong>Erro:</strong> linhas não podem se cruzar!"
+      };
+      drawLocal.draw.handlers.rectangle.tooltip = {
+        start: "Clique e arraste para desenhar o retângulo."
+      };
+      drawLocal.draw.handlers.simpleshape = {
+        tooltip: { end: "Solte o mouse para finalizar." }
+      };
+      drawLocal.edit.toolbar.actions = {
+        save: { title: "Salvar alterações", text: "Salvar" },
+        cancel: { title: "Cancelar edição", text: "Cancelar" },
+        clearAll: { title: "Limpar tudo", text: "Limpar" }
+      };
+      drawLocal.edit.toolbar.buttons = {
+        edit: "Editar formas",
+        editDisabled: "Sem formas para editar",
+        remove: "Apagar formas",
+        removeDisabled: "Sem formas para apagar"
+      };
+      drawLocal.edit.handlers.edit.tooltip = {
+        text: "Arraste pontos para editar.",
+        subtext: "Clique em cancelar para desfazer."
+      };
+      drawLocal.edit.handlers.remove.tooltip = {
+        text: "Clique numa forma para removê-la."
+      };
+    }
 
     // ======= Draw Controls =======
     this.drawControl = new (L as any).Control.Draw({
