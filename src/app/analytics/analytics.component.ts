@@ -1,12 +1,13 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import * as L from 'leaflet';
-import { MockDataService, CityInfo, TimelinePoint } from '../services/mock-data.service';
-import { IpacService, SetorIPAC } from '../services/ipac.service';
-import { SimulationService, SimulationResult, SensitivityResult, Cenario, SimulationInput } from '../services/simulation.service';
-import { BIBLIOTECA_SOLUCOES } from '../constants/solucoes-simulacao';
+import { Component, OnInit, inject } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+import { ActivatedRoute } from "@angular/router";
+import * as L from "leaflet";
+import "leaflet-draw";
+import { MockDataService, CityInfo, TimelinePoint } from "../services/mock-data.service";
+import { IpacService, SetorIPAC } from "../services/ipac.service";
+import { SimulationService, SimulationResult, SensitivityResult, Cenario, SimulationInput, SolutionCost } from "../services/simulation.service";
+import { BIBLIOTECA_SOLUCOES, SolucaoSimulacao } from "../constants/solucoes-simulacao";
 
 @Component({
   selector: 'app-analytics',
@@ -158,12 +159,28 @@ export class AnalyticsComponent implements OnInit {
   anomalyLayerGroup: L.LayerGroup | undefined;
   mainMarker: L.Marker | undefined;
   selectedPinMarker: L.Marker | undefined;
+  drawControl: any;
+  drawnItems: L.FeatureGroup = new L.FeatureGroup();
 
   center = { lat: -23.5505, lng: -46.6333 };
   zoom = 10;
   selectedPin: { lat: number, lng: number } | null = null;
   pinLoading = false;
-  pinIndicators = { temperature: '--', floodRisk: '--', elevation: '--' };
+  pinIndicators = { temperature: "--", floodRisk: "--", elevation: "--" };
+  pinTemperatureSource: "api" | "lst_satelite" | null = null;
+
+  // Drawing / Measurement
+  measuredArea: number | null = null;
+  measuredSuggestions: { solucao: SolucaoSimulacao; quantidade: number; custoTotal: number }[] = [];
+  showMeasurePanel = false;
+
+  // Modal de detalhamento de solução
+  showSolutionModal = false;
+  selectedSolution: SolucaoSimulacao | null = null;
+  selectedSolutionCost: SolutionCost | null = null;
+
+  // Biblioteca de soluções (ref para o template)
+  readonly biblioteca = BIBLIOTECA_SOLUCOES;
 
   initMap() {
     const mapEl = document.getElementById("simulation-map");
@@ -186,13 +203,53 @@ export class AnalyticsComponent implements OnInit {
     this.map = L.map("simulation-map", { zoomControl: false }).setView([this.center.lat, this.center.lng], this.zoom);
     L.control.zoom({ position: "bottomright" }).addTo(this.map);
 
-    // Using Carto basemap (Free, minimal aesthetic)
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+    // Carto Dark Matter for premium feel
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
       maxZoom: 19,
       attribution: "&copy; OpenStreetMap"
     }).addTo(this.map);
 
     this.anomalyLayerGroup = L.layerGroup().addTo(this.map);
+    this.drawnItems = new L.FeatureGroup();
+    this.map.addLayer(this.drawnItems);
+
+    // Leaflet Draw Controls
+    this.drawControl = new (L as any).Control.Draw({
+      position: "topright",
+      draw: {
+        polygon: {
+          allowIntersection: false,
+          showArea: true,
+          shapeOptions: { color: "#10b981", weight: 2, fillOpacity: 0.15 }
+        },
+        circle: {
+          shapeOptions: { color: "#3b82f6", weight: 2, fillOpacity: 0.1 }
+        },
+        rectangle: {
+          shapeOptions: { color: "#a855f7", weight: 2, fillOpacity: 0.1 }
+        },
+        polyline: false,
+        marker: false,
+        circlemarker: false
+      },
+      edit: {
+        featureGroup: this.drawnItems,
+        remove: true
+      }
+    });
+    this.map.addControl(this.drawControl);
+
+    // Draw Events
+    this.map.on((L as any).Draw.Event.CREATED, (e: any) => {
+      const layer = e.layer;
+      this.drawnItems.addLayer(layer);
+      this.onShapeDrawn(layer, e.layerType);
+    });
+
+    this.map.on((L as any).Draw.Event.DELETED, () => {
+      this.closeMeasurePanel();
+    });
+
     this.updateMainMarker();
     this.updateAnomalyMarkers();
 
@@ -312,9 +369,26 @@ export class AnalyticsComponent implements OnInit {
   onMapClick(lat: number, lng: number) {
     this.selectedPin = { lat, lng };
     this.pinLoading = true;
-    this.pinIndicators = { temperature: '...', floodRisk: '...', elevation: '...' };
+    this.pinTemperatureSource = null;
+    this.pinIndicators = { temperature: "...", floodRisk: "...", elevation: "..." };
 
-    this.dataService.getTemperatureByCoords(lat, lng).subscribe(val => { this.pinIndicators.temperature = val; });
+    // Busca temperatura com fallback para LST do setor selecionado
+    this.dataService.getTemperatureByCoords(lat, lng).subscribe(val => {
+      if (val === "-- °C" || val === "... °C") {
+        // Fallback: usar LST P90 do setor IPAC selecionado
+        const setor = this.getSelectedSetor();
+        if (setor && setor.lst_p90) {
+          this.pinIndicators.temperature = `${setor.lst_p90.toFixed(1)} °C`;
+          this.pinTemperatureSource = "lst_satelite";
+        } else {
+          this.pinIndicators.temperature = val;
+          this.pinTemperatureSource = "api";
+        }
+      } else {
+        this.pinIndicators.temperature = val;
+        this.pinTemperatureSource = "api";
+      }
+    });
     this.dataService.getFloodRiskByCoords(lat, lng).subscribe(val => { this.pinIndicators.floodRisk = val; });
     this.dataService.getElevationByCoords(lat, lng).subscribe(val => { this.pinIndicators.elevation = val; this.pinLoading = false; });
 
@@ -469,5 +543,101 @@ export class AnalyticsComponent implements OnInit {
       };
     }
     this.runSimulation();
+  }
+
+  // ---- Map Drawing / Measurement ----
+  onShapeDrawn(layer: any, layerType: string) {
+    let areaM2 = 0;
+
+    if (layerType === "circle") {
+      const radius = layer.getRadius();
+      areaM2 = Math.PI * radius * radius;
+    } else if (layerType === "polygon" || layerType === "rectangle") {
+      // Geodesic area via Leaflet
+      const latlngs = layer.getLatLngs()[0];
+      areaM2 = Math.abs((L as any).GeometryUtil?.geodesicArea(latlngs) || this.calcPolygonArea(latlngs));
+    }
+
+    this.measuredArea = +areaM2.toFixed(0);
+    this.measuredSuggestions = this.calcSugestoes(areaM2);
+    this.showMeasurePanel = true;
+
+    // Popup no shape
+    const center = layer.getBounds ? layer.getBounds().getCenter() : layer.getLatLng();
+    L.popup({ className: "measure-popup" })
+      .setLatLng(center)
+      .setContent(`<div class="p-2 text-center">
+        <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">📐 Área Medida</p>
+        <p class="text-lg font-black text-white">${this.measuredArea?.toLocaleString("pt-BR")} m²</p>
+      </div>`)
+      .openOn(this.map!);
+  }
+
+  private calcPolygonArea(latlngs: L.LatLng[]): number {
+    // Shoelace formula approximation
+    let area = 0;
+    const n = latlngs.length;
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      area += latlngs[i].lng * latlngs[j].lat;
+      area -= latlngs[j].lng * latlngs[i].lat;
+    }
+    return Math.abs(area / 2) * 111319.9 * 111319.9; // deg² to m² approximation
+  }
+
+  private calcSugestoes(areaM2: number): { solucao: SolucaoSimulacao; quantidade: number; custoTotal: number }[] {
+    return BIBLIOTECA_SOLUCOES
+      .filter(sol => sol.custo_unitario && sol.custo_unitario > 0)
+      .map(sol => {
+        let quantidade: number;
+        if (sol.unidade === "unidade" && sol.area_equivalente) {
+          quantidade = Math.floor(areaM2 / sol.area_equivalente);
+        } else {
+          quantidade = areaM2;
+        }
+        const custoTotal = quantidade * (sol.custo_unitario || 0) * sol.fator_regional;
+        return { solucao: sol, quantidade: +quantidade.toFixed(0), custoTotal: +custoTotal.toFixed(0) };
+      })
+      .filter(s => s.quantidade > 0)
+      .sort((a, b) => a.custoTotal - b.custoTotal);
+  }
+
+  closeMeasurePanel() {
+    this.showMeasurePanel = false;
+    this.measuredArea = null;
+    this.measuredSuggestions = [];
+  }
+
+  // ---- Modal de Detalhamento ----
+  openSolutionModal(solId: string) {
+    this.selectedSolution = BIBLIOTECA_SOLUCOES.find(s => s.id === solId) || null;
+    if (this.simResult) {
+      this.selectedSolutionCost = this.simResult.financeiro.detalhePorSolucao.find(s => s.id === solId) || null;
+    }
+    this.showSolutionModal = true;
+  }
+
+  closeSolutionModal() {
+    this.showSolutionModal = false;
+    this.selectedSolution = null;
+    this.selectedSolutionCost = null;
+  }
+
+  getEixoIcon(eixo: string): string {
+    switch (eixo) {
+      case "calor": return "🔥";
+      case "agua": return "💧";
+      case "qualidade_urbana": return "🌿";
+      default: return "📍";
+    }
+  }
+
+  getEixoLabel(eixo: string): string {
+    switch (eixo) {
+      case "calor": return "Eixo Calor";
+      case "agua": return "Eixo Água";
+      case "qualidade_urbana": return "Qualidade Urbana";
+      default: return eixo;
+    }
   }
 }

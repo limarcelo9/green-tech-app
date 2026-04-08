@@ -225,35 +225,73 @@
                     <h2 class="text-2xl font-black text-gray-900 dark:text-white filter drop-shadow-md drop-shadow-white/20">{{ getSelectedSetor()?.ra_nome }}</h2>
                 </div>
 
-                <!-- Floating Indicator Panel (Remastered) -->
+                <!-- Floating Pin Panel (v3.0 Premium Dark) -->
                 <div *ngIf="selectedPin"
-                    class="absolute bottom-6 left-6 max-w-[320px] w-full bg-white/40 dark:bg-black/40 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/20 dark:border-white/10 p-5 z-50 animate-in slide-in-from-left-4 duration-500">
+                    class="absolute bottom-6 left-6 max-w-[340px] w-full bg-gray-900/80 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/10 p-5 z-50" style="animation: slideUp 0.4s ease-out;">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-2">
-                            <div class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></div>
-                            <span class="text-[10px] font-black text-gray-800 dark:text-gray-200 uppercase tracking-[0.2em]">Ponto de Análise</span>
+                            <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                            <span class="text-[10px] font-black text-white uppercase tracking-[0.2em]">Ponto de Análise</span>
                         </div>
-                        <button (click)="clearPin()" class="p-1.5 hover:bg-red-500/10 rounded-full text-gray-400 hover:text-red-500 transition-all">
+                        <button (click)="clearPin()" class="p-1.5 hover:bg-red-500/20 rounded-full text-gray-400 hover:text-red-400 transition-all">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
                     </div>
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="bg-red-500/10 rounded-2xl p-3 text-center border border-red-500/20">
-                            <p class="text-[9px] font-bold text-red-500 uppercase tracking-widest mb-1">Temp</p>
-                            <p class="text-sm font-black text-red-600 dark:text-red-400">{{ pinIndicators.temperature }}</p>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="bg-red-500/10 rounded-2xl p-3 text-center border border-red-500/20 relative">
+                            <p class="text-[9px] font-bold text-red-400 uppercase tracking-widest mb-1">Temp</p>
+                            <p class="text-sm font-black text-red-400">{{ pinIndicators.temperature }}</p>
+                            <span *ngIf="pinTemperatureSource === 'lst_satelite'"
+                                class="absolute -top-1 -right-1 px-1 py-0.5 bg-amber-500/20 text-amber-400 text-[7px] font-bold rounded-full border border-amber-500/30">LST</span>
                         </div>
                         <div class="bg-blue-500/10 rounded-2xl p-3 text-center border border-blue-500/20">
-                            <p class="text-[9px] font-bold text-blue-500 uppercase tracking-widest mb-1">Alag</p>
-                            <p class="text-sm font-black text-blue-600 dark:text-blue-400">{{ pinIndicators.floodRisk }}</p>
+                            <p class="text-[9px] font-bold text-blue-400 uppercase tracking-widest mb-1">Alag</p>
+                            <p class="text-sm font-black text-blue-400">{{ pinIndicators.floodRisk }}</p>
                         </div>
                         <div class="bg-stone-500/10 rounded-2xl p-3 text-center border border-stone-500/20">
-                            <p class="text-[9px] font-bold text-stone-500 uppercase tracking-widest mb-1">Alt</p>
-                            <p class="text-sm font-black text-stone-600 dark:text-stone-300">{{ pinIndicators.elevation }}</p>
+                            <p class="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-1">Alt</p>
+                            <p class="text-sm font-black text-stone-300">{{ pinIndicators.elevation }}</p>
                         </div>
                     </div>
+                    <p class="text-[8px] text-gray-500 mt-3 text-center font-mono">{{ selectedPin.lat.toFixed(5) }}, {{ selectedPin.lng.toFixed(5) }}</p>
                     <div *ngIf="pinLoading"
-                        class="absolute inset-0 bg-white/40 dark:bg-black/40 rounded-3xl flex items-center justify-center backdrop-blur-md">
-                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+                        class="absolute inset-0 bg-gray-900/60 rounded-3xl flex items-center justify-center backdrop-blur-md">
+                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-400"></div>
+                    </div>
+                </div>
+
+                <!-- Floating Measure Panel (v3.0) -->
+                <div *ngIf="showMeasurePanel && measuredArea"
+                    class="absolute top-6 right-6 w-[320px] bg-gray-900/90 backdrop-blur-2xl rounded-3xl shadow-2xl border border-emerald-500/20 p-5 z-50 max-h-[60vh] overflow-y-auto" style="animation: slideUp 0.4s ease-out;">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg">📐</span>
+                            <span class="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em]">Área Medida</span>
+                        </div>
+                        <button (click)="closeMeasurePanel()" class="p-1.5 hover:bg-red-500/20 rounded-full text-gray-400 hover:text-red-400 transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+
+                    <div class="text-center mb-5 py-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+                        <p class="text-3xl font-black text-white">{{ measuredArea | number }} m²</p>
+                        <p class="text-[9px] text-gray-400 mt-1">≈ {{ (measuredArea! / 10000) | number:'1.2-2' }} hectares</p>
+                    </div>
+
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Soluções que cabem nessa área</p>
+                    <div class="space-y-2">
+                        <div *ngFor="let sug of measuredSuggestions | slice:0:6"
+                            class="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 hover:border-emerald-500/30 transition-all cursor-pointer"
+                            (click)="openSolutionModal(sug.solucao.id)">
+                            <div class="flex items-center gap-2 flex-1 min-w-0">
+                                <span class="text-sm">{{ getEixoIcon(sug.solucao.eixo_principal) }}</span>
+                                <div class="min-w-0">
+                                    <p class="text-xs font-bold text-white truncate">{{ sug.solucao.nome }}</p>
+                                    <p class="text-[9px] text-gray-400">{{ sug.quantidade | number }} {{ sug.solucao.unidade }}</p>
+                                </div>
+                            </div>
+                            <p class="text-xs font-black text-emerald-400 whitespace-nowrap ml-2">{{ sug.custoTotal | currency:'BRL':'symbol':'1.0-0' }}</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -788,6 +826,109 @@
                 </button>
             </div>
         </div>
+    </div>
+</div>
+}
+
+<!-- ====================== MODAL: Detalhamento de Solução (v3.0) ====================== -->
+@if (showSolutionModal && selectedSolution) {
+<div class="fixed inset-0 z-[9999] flex items-center justify-center p-4" style="animation: fadeIn 0.3s ease-out;">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" (click)="closeSolutionModal()"></div>
+    <div class="relative bg-gray-900 rounded-[32px] border border-white/10 shadow-2xl w-full max-w-[600px] max-h-[85vh] overflow-y-auto p-8" style="animation: slideUp 0.4s ease-out;">
+
+        <!-- Header -->
+        <div class="flex items-start justify-between mb-6">
+            <div>
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-2xl">{{ getEixoIcon(selectedSolution.eixo_principal) }}</span>
+                    <span class="px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full"
+                        [ngClass]="{
+                            'bg-red-500/20 text-red-400': selectedSolution.eixo_principal === 'calor',
+                            'bg-blue-500/20 text-blue-400': selectedSolution.eixo_principal === 'agua',
+                            'bg-green-500/20 text-green-400': selectedSolution.eixo_principal === 'qualidade_urbana'
+                        }">{{ getEixoLabel(selectedSolution.eixo_principal) }}</span>
+                    <span class="px-2 py-0.5 bg-white/10 text-gray-300 text-[9px] font-bold rounded-full">{{ selectedSolution.categoria }}</span>
+                </div>
+                <h3 class="text-2xl font-black text-white tracking-tight">{{ selectedSolution.nome }}</h3>
+            </div>
+            <button (click)="closeSolutionModal()" class="p-2 hover:bg-red-500/20 rounded-full text-gray-400 hover:text-red-400 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <!-- Cost Breakdown -->
+        <div class="grid grid-cols-3 gap-3 mb-6">
+            <div class="bg-white/5 rounded-2xl p-4 text-center border border-white/5">
+                <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Custo Unitário</p>
+                <p class="text-lg font-black text-white">{{ selectedSolution.custo_unitario | currency:'BRL':'symbol':'1.0-0' }}</p>
+                <p class="text-[9px] text-gray-500">por {{ selectedSolution.unidade }}</p>
+            </div>
+            <div class="bg-white/5 rounded-2xl p-4 text-center border border-white/5">
+                <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Fator Regional</p>
+                <p class="text-lg font-black text-amber-400">{{ selectedSolution.fator_regional }}×</p>
+                <p class="text-[9px] text-gray-500">multiplicador DF</p>
+            </div>
+            <div class="bg-white/5 rounded-2xl p-4 text-center border border-white/5">
+                <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Custo Efetivo</p>
+                <p class="text-lg font-black text-emerald-400">{{ (selectedSolution.custo_unitario || 0) * selectedSolution.fator_regional | currency:'BRL':'symbol':'1.0-0' }}</p>
+                <p class="text-[9px] text-gray-500">por {{ selectedSolution.unidade }} (c/ fator)</p>
+            </div>
+        </div>
+
+        <!-- Current Simulation Data -->
+        @if (selectedSolutionCost) {
+        <div class="bg-emerald-500/10 rounded-2xl p-5 border border-emerald-500/20 mb-6">
+            <p class="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-3">Na Simulação Atual</p>
+            <div class="grid grid-cols-3 gap-4">
+                <div>
+                    <p class="text-xl font-black text-white">{{ selectedSolutionCost.areaIntervencao | number }} m²</p>
+                    <p class="text-[9px] text-gray-400">Área de Intervenção</p>
+                </div>
+                <div>
+                    <p class="text-xl font-black text-white">{{ selectedSolutionCost.custoTotal | currency:'BRL':'symbol':'1.0-0' }}</p>
+                    <p class="text-[9px] text-gray-400">Custo Total</p>
+                </div>
+                <div>
+                    <p class="text-xl font-black text-white">{{ selectedSolutionCost.eficiencia | number:'1.2-2' }}</p>
+                    <p class="text-[9px] text-gray-400">Eficiência (imp/R$k)</p>
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- Technical Impacts -->
+        <div class="mb-6">
+            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Impactos por Indicador</p>
+            <div class="space-y-2">
+                @for (imp of selectedSolution.impactos; track imp.indicador) {
+                <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                    <span class="text-xs font-bold text-gray-300 w-24 uppercase">{{ imp.indicador }}</span>
+                    <div class="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-700"
+                            [style.width.%]="(imp.fatores.medio / 5) * 100"
+                            [ngClass]="{
+                                'bg-gradient-to-r from-red-500 to-orange-400': imp.indicador === 'lst',
+                                'bg-gradient-to-r from-blue-500 to-cyan-400': imp.indicador === 'escoamento' || imp.indicador === 'infiltracao',
+                                'bg-gradient-to-r from-green-500 to-emerald-400': imp.indicador === 'energia' || imp.indicador === 'conforto_termico'
+                            }"></div>
+                    </div>
+                    <div class="flex gap-2 text-[9px] font-mono min-w-[120px]">
+                        <span class="text-yellow-400">C:{{ imp.fatores.conservador }}</span>
+                        <span class="text-emerald-400">M:{{ imp.fatores.medio }}</span>
+                        <span class="text-red-400">A:{{ imp.fatores.agressivo }}</span>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Technical Note -->
+        @if (selectedSolution.observacao_tecnica) {
+        <div class="bg-blue-500/10 rounded-2xl p-4 border border-blue-500/20">
+            <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">📚 Observação Técnica</p>
+            <p class="text-xs text-gray-300 leading-relaxed">{{ selectedSolution.observacao_tecnica }}</p>
+        </div>
+        }
     </div>
 </div>
 }
