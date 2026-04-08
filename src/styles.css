@@ -29,3 +29,24 @@
   scrollbar-width: thin;
   scrollbar-color: #374151 transparent;
 }
+
+/* ======= LEAFLET DRAW EDIT HANDLES ======= */
+/* Personaliza os "quadrados brancos" do modo editar formas */
+.leaflet-editing-icon {
+  background-color: #10b981 !important;
+  border: 2px solid #064e3b !important;
+  border-radius: 50% !important;
+  width: 10px !important;
+  height: 10px !important;
+  margin-top: -5px !important;
+  margin-left: -5px !important;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6) !important;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Ponto sob hover no modo edição */
+.leaflet-editing-icon:hover {
+  background-color: #34d399 !important;
+  border-color: #10b981 !important;
+  transform: scale(1.3);
+}
