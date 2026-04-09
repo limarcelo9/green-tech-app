@@ -3,10 +3,11 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import * as L from "leaflet";
-import "leaflet-draw";
+import "@geoman-io/leaflet-geoman-free";
 import { MockDataService, CityInfo, TimelinePoint } from "../services/mock-data.service";
 import { IpacService, SetorIPAC } from "../services/ipac.service";
 import { SimulationService, SimulationResult, SensitivityResult, Cenario, SimulationInput, SolutionCost } from "../services/simulation.service";
+import { EnvironmentalLayersService } from "../services/environmental-layers.service";
 import { BIBLIOTECA_SOLUCOES, SolucaoSimulacao } from "../constants/solucoes-simulacao";
 
 @Component({
@@ -21,6 +22,7 @@ export class AnalyticsComponent implements OnInit {
   dataService = inject(MockDataService);
   ipacService = inject(IpacService);
   simService = inject(SimulationService);
+  environmentalLayersService = inject(EnvironmentalLayersService);
   private zone = inject(NgZone);
  
    showIntegrityDetails = false;
@@ -155,13 +157,21 @@ export class AnalyticsComponent implements OnInit {
   // Sensitivity
   sensitivityResults: SensitivityResult[] = [];
 
+  // Visual UI State
+  // Visual UI State
+  isToolbarMinimized = false;
+  isLayersPanelMinimized = false;
+
   // Map Integration
   map: L.Map | undefined;
   anomalyLayerGroup: L.LayerGroup | undefined;
   mainMarker: L.Marker | undefined;
   selectedPinMarker: L.Marker | undefined;
-  drawControl: any;
+
+  // Draw Management
   drawnItems: L.FeatureGroup = new L.FeatureGroup();
+  activeDrawTool: string | null = null;
+  polygonClicks: number = 0;
 
   center = { lat: -23.5505, lng: -46.6333 };
   zoom = 10;
@@ -182,6 +192,8 @@ export class AnalyticsComponent implements OnInit {
 
   // Biblioteca de soluções (ref para o template)
   readonly biblioteca = BIBLIOTECA_SOLUCOES;
+
+  private readonly LS_KEY = "greentech_drawn_items";
 
   initMap() {
     const mapEl = document.getElementById("simulation-map");
@@ -204,8 +216,8 @@ export class AnalyticsComponent implements OnInit {
     this.map = L.map("simulation-map", { zoomControl: false }).setView([this.center.lat, this.center.lng], this.zoom);
     L.control.zoom({ position: "bottomright" }).addTo(this.map);
 
-    // Carto Dark Matter for premium feel
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    // Carto Positron para um tom mais claro e premium
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
       maxZoom: 19,
       attribution: "&copy; OpenStreetMap"
     }).addTo(this.map);
@@ -214,112 +226,60 @@ export class AnalyticsComponent implements OnInit {
     this.drawnItems = new L.FeatureGroup();
     this.map.addLayer(this.drawnItems);
 
-    // ======= Tradução Leaflet Draw para PT-BR =======
-    const drawLocal = (L as any).drawLocal;
-    
-    if (drawLocal && drawLocal.draw && drawLocal.edit) {
-      drawLocal.draw.toolbar.actions = { title: "Cancelar desenho", text: "Cancelar" };
-      drawLocal.draw.toolbar.finish = { title: "Finalizar desenho", text: "Finalizar" };
-      drawLocal.draw.toolbar.undo = { title: "Desfazer último ponto", text: "Desfazer" };
-      drawLocal.draw.toolbar.buttons = {
-        polyline: "Régua — Medir distância",
-        polygon: "Desenhar polígono",
-        rectangle: "Desenhar retângulo",
-        circle: "Desenhar círculo",
-        marker: "Adicionar marcador",
-        circlemarker: "Marcador circular"
-      };
-      drawLocal.draw.handlers.circle = {
-        tooltip: { start: "Clique e arraste para desenhar o círculo." },
-        radius: "Raio"
-      };
-      drawLocal.draw.handlers.polygon = {
-        tooltip: {
-          start: "Clique para começar a desenhar.",
-          cont: "Clique para continuar desenhando.",
-          end: "Clique no primeiro ponto para fechar."
-        }
-      };
-      drawLocal.draw.handlers.polyline = {
-        tooltip: {
-          start: "Clique para iniciar a medição.",
-          cont: "Clique para continuar medindo.",
-          end: "Clique no último ponto para finalizar."
-        },
-        error: "<strong>Erro:</strong> linhas não podem se cruzar!"
-      };
-      drawLocal.draw.handlers.rectangle.tooltip = {
-        start: "Clique e arraste para desenhar o retângulo."
-      };
-      drawLocal.draw.handlers.simpleshape = {
-        tooltip: { end: "Solte o mouse para finalizar." }
-      };
-      drawLocal.edit.toolbar.actions = {
-        save: { title: "Salvar alterações", text: "Salvar" },
-        cancel: { title: "Cancelar edição", text: "Cancelar" },
-        clearAll: { title: "Limpar tudo", text: "Limpar" }
-      };
-      drawLocal.edit.toolbar.buttons = {
-        edit: "Editar formas",
-        editDisabled: "Sem formas para editar",
-        remove: "Apagar formas",
-        removeDisabled: "Sem formas para apagar"
-      };
-      drawLocal.edit.handlers.edit.tooltip = {
-        text: "Arraste pontos para editar.",
-        subtext: "Clique em cancelar para desfazer."
-      };
-      drawLocal.edit.handlers.remove.tooltip = {
-        text: "Clique numa forma para removê-la."
-      };
-    }
-
-    // ======= Draw Controls =======
-    this.drawControl = new (L as any).Control.Draw({
-      position: "topright",
-      draw: {
-        polyline: {
-          metric: true,
-          feet: false,
-          shapeOptions: { color: "#f59e0b", weight: 3, dashArray: "10, 5" }
-        },
-        polygon: {
-          allowIntersection: false,
-          showArea: true,
-          metric: true,
-          feet: false,
-          shapeOptions: { color: "#10b981", weight: 2, fillOpacity: 0.15 }
-        },
-        circle: {
-          metric: true,
-          feet: false,
-          shapeOptions: { color: "#3b82f6", weight: 2, fillOpacity: 0.1 }
-        },
-        rectangle: {
-          metric: true,
-          feet: false,
-          shapeOptions: { color: "#a855f7", weight: 2, fillOpacity: 0.1 }
-        },
-        marker: false,
-        circlemarker: false
-      },
-      edit: {
-        featureGroup: this.drawnItems,
-        remove: true
-      }
+    // ======= Geoman Setup =======
+    this.map.pm.setGlobalOptions({
+      layerGroup: this.drawnItems,
+      snappable: true,
+      snapDistance: 20,
     });
-    this.map.addControl(this.drawControl);
+    this.map.pm.setLang("pt_br");
 
-    // ======= Draw Events (NgZone para Angular detectar mudanças) =======
-    this.map.on('draw:created', (e: any) => {
+    // ======= Custom Events =======
+    this.map.on('pm:create', (e: any) => {
       const layer = e.layer;
       this.drawnItems.addLayer(layer);
-      this.zone.run(() => this.onShapeDrawn(layer, e.layerType));
+      this.zone.run(() => {
+        this.bindMeasurementPopup(layer);
+        this.saveDrawings();
+        this.activeDrawTool = null;
+      });
     });
 
-    this.map.on('draw:deleted', () => {
-      this.zone.run(() => this.closeMeasurePanel());
+    this.map.on('pm:remove', () => {
+      this.zone.run(() => {
+        this.closeMeasurePanel();
+        this.saveDrawings();
+      });
     });
+
+    this.map.on('pm:drawstart', (e: any) => {
+      this.polygonClicks = 0;
+      if (e.shape === 'Polygon' || e.shape === 'Line') {
+        e.workingLayer.on('pm:vertexadded', () => {
+          this.polygonClicks++;
+          if (e.shape === 'Polygon' && this.polygonClicks === 4 && this.map?.pm.Draw['Polygon']) {
+            setTimeout(() => {
+              (this.map?.pm.Draw['Polygon'] as any)._finishShape();
+            }, 50);
+          }
+        });
+      }
+    });
+
+    this.map.on('pm:globaleditmodetoggled', (e: any) => {
+        if (!e.enabled) {
+            // Edit finalizado
+            this.zone.run(() => {
+                this.drawnItems.eachLayer((layer: any) => {
+                    this.bindMeasurementPopup(layer);
+                });
+                this.saveDrawings();
+            });
+        }
+    });
+
+    // ======= Carregar drawings persistidos do LocalStorage =======
+    this.loadDrawings();
 
     this.updateMainMarker();
     this.updateAnomalyMarkers();
@@ -327,6 +287,110 @@ export class AnalyticsComponent implements OnInit {
     this.map.on("click", (e: L.LeafletMouseEvent) => {
       this.onMapClick(e.latlng.lat, e.latlng.lng);
     });
+  }
+
+  // ======= localStorage — Persistência de Shapes =======
+  private saveDrawings() {
+    try {
+      this.drawnItems.eachLayer((layer: any) => {
+        if (!layer.feature) layer.feature = { type: 'Feature', properties: {} };
+        if (layer.getRadius) {
+           layer.feature!.properties.isCircle = true;
+           layer.feature!.properties.radius = layer.getRadius();
+        } else if (layer instanceof L.Polygon) {
+           layer.feature!.properties.isPolygon = true;
+        } else if (layer instanceof L.Polyline) {
+           layer.feature!.properties.isPolyline = true;
+        }
+      });
+      const geojson = this.drawnItems.toGeoJSON();
+      localStorage.setItem(this.LS_KEY, JSON.stringify(geojson));
+    } catch (e) {
+      console.warn("GreenTech: Falha ao salvar drawings", e);
+    }
+  }
+
+  private loadDrawings() {
+    try {
+      const raw = localStorage.getItem(this.LS_KEY);
+      if (!raw || !this.map) return;
+      const geojson = JSON.parse(raw);
+
+      L.geoJSON(geojson, {
+        pointToLayer: (feature, latlng) => {
+           if (feature.properties && feature.properties.isCircle) {
+              return L.circle(latlng, {
+                 radius: feature.properties.radius,
+                 color: "#3b82f6", weight: 2, fillOpacity: 0.1
+              });
+           }
+           return L.marker(latlng);
+        },
+        style: (feature) => {
+          if (feature?.properties?.isCircle) return {};
+          if (feature?.properties?.isPolygon) return { color: "#10b981", weight: 2, fillOpacity: 0.15, dashArray: "8, 4" };
+          if (feature?.properties?.isPolyline) return { color: "#f59e0b", weight: 3, dashArray: "10, 5" };
+          return { color: "#10b981", weight: 2, fillOpacity: 0.15 };
+        },
+        onEachFeature: (feature, layer) => {
+          this.bindMeasurementPopup(layer);
+          this.drawnItems.addLayer(layer);
+        }
+      });
+
+      // Badge de restauração
+      const count = (geojson as any).features?.length || 0;
+      if (count > 0) {
+        const BadgeControl = (L as any).Control.extend({
+          onAdd: () => {
+            const div = L.DomUtil.create("div", "leaflet-restored-badge");
+            div.innerHTML = `<span>💾 ${count} área${count > 1 ? "s" : ""} restaurada${count > 1 ? "s" : ""}</span>`;
+            setTimeout(() => div.classList.add("fade-out"), 3500);
+            setTimeout(() => div.remove(), 4500);
+            return div;
+          }
+        });
+        new BadgeControl({ position: "bottomleft" }).addTo(this.map!);
+      }
+    } catch (e) {
+      console.warn("GreenTech: Falha ao carregar drawings", e);
+    }
+  }
+
+  startDraw(tool: string) {
+    this.cancelDraw();
+    this.activeDrawTool = tool;
+    this.polygonClicks = 0;
+    
+    if (tool === 'polygon') this.map?.pm.enableDraw('Polygon', {
+        snappable: true, snapDistance: 20, 
+        pathOptions: { color: "#10b981", weight: 2, fillOpacity: 0.15, dashArray: "8, 4" }
+    });
+    else if (tool === 'polyline') this.map?.pm.enableDraw('Line', {
+        snappable: true, snapDistance: 20, 
+        pathOptions: { color: "#f59e0b", weight: 3, dashArray: "10, 5" }
+    });
+    else if (tool === 'circle') this.map?.pm.enableDraw('Circle', {
+        snappable: true, snapDistance: 20, 
+        pathOptions: { color: "#3b82f6", weight: 2, fillOpacity: 0.1 }
+    });
+    else if (tool === 'edit') this.map?.pm.toggleGlobalEditMode();
+    else if (tool === 'delete') this.map?.pm.toggleGlobalRemovalMode();
+  }
+
+  saveEdit() {
+    this.map?.pm.disableGlobalEditMode();
+    this.map?.pm.disableGlobalRemovalMode();
+    this.activeDrawTool = null;
+    this.saveDrawings();
+  }
+
+  cancelDraw() {
+    this.map?.pm.disableDraw();
+    this.map?.pm.disableGlobalEditMode();
+    this.map?.pm.disableGlobalRemovalMode();
+    this.activeDrawTool = null;
+    this.polygonClicks = 0;
   }
 
 
@@ -405,6 +469,15 @@ export class AnalyticsComponent implements OnInit {
       const id = e.detail;
       const setor = this.setoresIPAC.find(s => s.id_ra === id);
       if (setor) this.openAnomalyReport(setor);
+    });
+
+    window.addEventListener("open-measure-panel", (e: any) => {
+      this.zone.run(() => {
+        const area = e.detail;
+        this.measuredArea = area;
+        this.measuredSuggestions = this.calcSugestoes(area);
+        this.showMeasurePanel = true;
+      });
     });
 
     this.route.paramMap.subscribe(() => {
@@ -616,66 +689,48 @@ export class AnalyticsComponent implements OnInit {
     this.runSimulation();
   }
 
-  // ---- Map Drawing / Measurement ----
-  onShapeDrawn(layer: any, layerType: string) {
+  private bindMeasurementPopup(layer: any) {
     let areaM2 = 0;
     let distanciaM = 0;
-    const isLine = layerType === "polyline";
+    let isLine = false;
 
-    if (isLine) {
-      // Régua: calcular distância total
-      const latlngs: L.LatLng[] = layer.getLatLngs();
-      for (let i = 1; i < latlngs.length; i++) {
-        distanciaM += latlngs[i - 1].distanceTo(latlngs[i]);
-      }
-    } else if (layerType === "circle") {
+    if (layer.getRadius) {
       const radius = layer.getRadius();
       areaM2 = Math.PI * radius * radius;
-    } else if (layerType === "polygon" || layerType === "rectangle") {
-      const latlngs = layer.getLatLngs()[0];
-      areaM2 = Math.abs((L as any).GeometryUtil?.geodesicArea(latlngs) || this.calcPolygonArea(latlngs));
-    }
-
-    // Popup no shape
-    let popupCenter: L.LatLng;
-    if (layer.getBounds) {
-      popupCenter = layer.getBounds().getCenter();
-    } else {
-      popupCenter = layer.getLatLng();
+    } else if (layer.getLatLngs) {
+      const latlngs = layer.getLatLngs();
+      if (latlngs.length > 0 && Array.isArray(latlngs[0])) {
+        areaM2 = Math.abs((L as any).GeometryUtil?.geodesicArea(latlngs[0]) || this.calcPolygonArea(latlngs[0]));
+      } else if (latlngs.length > 0) {
+        if (latlngs[0].lat && latlngs[0].lng && Array.isArray(latlngs) && !Array.isArray(latlngs[0])) {
+           isLine = true;
+           for (let i = 1; i < latlngs.length; i++) {
+             distanciaM += (latlngs[i - 1] as L.LatLng).distanceTo(latlngs[i] as L.LatLng);
+           }
+        }
+      }
     }
 
     if (isLine) {
-      // Régua: mostrar distância
       const distFormatada = distanciaM >= 1000
         ? `${(distanciaM / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 2 })} km`
         : `${distanciaM.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} m`;
 
-      L.popup({ className: "measure-popup" })
-        .setLatLng(popupCenter)
-        .setContent(`<div style="padding:8px;text-align:center;">
+      layer.bindPopup(`<div style="padding:8px;text-align:center;">
           <p style="font-size:10px;font-weight:800;color:#f59e0b;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:4px;">📏 Distância Medida</p>
           <p style="font-size:18px;font-weight:900;color:white;">${distFormatada}</p>
-        </div>`)
-        .openOn(this.map!);
-
-      // Não mostra painel de sugestões para linha
-      this.showMeasurePanel = false;
-    } else {
-      // Área: mostrar área e sugestões
-      this.measuredArea = +areaM2.toFixed(0);
-      this.measuredSuggestions = this.calcSugestoes(areaM2);
-      this.showMeasurePanel = true;
-
+        </div>`, { className: "measure-popup" });
+    } else if (areaM2 > 0) {
       const hectares = (areaM2 / 10000).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
-
-      L.popup({ className: "measure-popup" })
-        .setLatLng(popupCenter)
-        .setContent(`<div style="padding:8px;text-align:center;">
+      layer.bindPopup(`<div style="padding:8px;text-align:center;">
           <p style="font-size:10px;font-weight:800;color:#10b981;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:4px;">📐 Área Medida</p>
-          <p style="font-size:18px;font-weight:900;color:white;">${this.measuredArea?.toLocaleString("pt-BR")} m²</p>
+          <p style="font-size:18px;font-weight:900;color:white;">${areaM2.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} m²</p>
           <p style="font-size:9px;color:#9ca3af;margin-top:2px;">≈ ${hectares} hectares</p>
-        </div>`)
-        .openOn(this.map!);
+          <button onclick="window.dispatchEvent(new CustomEvent('open-measure-panel', {detail: ${areaM2}}))" 
+            style="margin-top: 10px; padding: 4px 8px; background: #10b981; color: white; border: none; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;">
+            Soluções para esta área
+          </button>
+        </div>`, { className: "measure-popup" });
     }
   }
 

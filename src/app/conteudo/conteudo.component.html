@@ -1,126 +1,179 @@
-<div class="h-full bg-slate-900 text-white p-8 flex flex-col items-center justify-center overflow-hidden">
-  
-  <!-- ESTADO INICIAL / GERADOR -->
-  <div *ngIf="!isFinished" class="max-w-2xl w-full text-center space-y-8 animate-in fade-in duration-700">
-    <div class="space-y-4">
-      <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
-        Gerador de Apresentações IA
+<div class="h-screen flex flex-col items-center justify-center overflow-hidden relative transition-colors duration-500"
+  style="background: var(--bg-base); color: var(--text-primary);">
+
+  <!-- Background decoration -->
+  <div class="absolute inset-0 pointer-events-none overflow-hidden">
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-[0.04]"
+      style="background: radial-gradient(circle, var(--brand) 0%, transparent 70%);"></div>
+  </div>
+
+  <!-- ══ INITIAL STATE ══ -->
+  <div *ngIf="!isFinished" class="relative max-w-xl w-full text-center space-y-10 px-8 animate-in fade-in duration-700">
+
+    <div class="space-y-3">
+      <div class="flex items-center justify-center gap-2 mb-5">
+        <div class="h-px flex-1 max-w-[60px]" style="background: var(--border);"></div>
+        <span class="text-[9px] font-bold uppercase tracking-[0.25em]" style="color: var(--text-tertiary);">GreenTech DF</span>
+        <div class="h-px flex-1 max-w-[60px]" style="background: var(--border);"></div>
+      </div>
+      <h1 class="text-4xl font-black tracking-tight font-display" style="color: var(--text-primary);">
+        Gerador de<br>
+        <span style="background: linear-gradient(135deg, var(--brand), #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+          Apresentações IA
+        </span>
       </h1>
-      <p class="text-slate-400 text-lg">
+      <p class="text-base font-medium leading-relaxed" style="color: var(--text-secondary);">
         Sintetize os diagnósticos do GreenTech e os insights do NotebookLM em segundos.
       </p>
     </div>
 
-    <div *ngIf="!isGenerating" class="flex flex-col items-center space-y-6">
-      <div class="w-24 h-24 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+    <!-- Idle State -->
+    <div *ngIf="!isGenerating" class="flex flex-col items-center gap-6">
+      <div class="w-20 h-20 rounded-3xl flex items-center justify-center"
+        style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.18);">
+        <svg class="w-9 h-9" style="color: var(--brand);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/>
         </svg>
       </div>
-      <button 
-        (click)="gerarApresentacao()"
-        class="group relative px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-semibold transition-all duration-300 shadow-lg shadow-emerald-900/20 hover:-translate-y-1 active:scale-95">
-        GERAR APRESENTAÇÃO
+
+      <button (click)="gerarApresentacao()"
+        class="group flex items-center gap-3 px-8 py-4 rounded-2xl text-sm font-bold uppercase tracking-wider text-white transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
+        style="background: linear-gradient(135deg, var(--brand), #059669); box-shadow: 0 4px 24px rgba(16,185,129,0.35);">
+        <svg class="w-4 h-4 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/>
+        </svg>
+        Gerar Apresentação
       </button>
     </div>
 
-    <!-- LOADING STATE -->
-    <div *ngIf="isGenerating" class="flex flex-col items-center space-y-6 py-8">
-      <div class="relative w-16 h-16">
-        <div class="absolute inset-0 border-4 border-emerald-500/20 rounded-full"></div>
-        <div class="absolute inset-0 border-4 border-t-emerald-500 rounded-full animate-spin"></div>
+    <!-- Loading State -->
+    <div *ngIf="isGenerating" class="flex flex-col items-center gap-5 py-6">
+      <div class="relative w-14 h-14">
+        <div class="absolute inset-0 rounded-full border-2" style="border-color: rgba(16,185,129,0.15);"></div>
+        <div class="absolute inset-0 rounded-full border-2 border-t-transparent animate-spin" style="border-color: var(--brand); border-top-color: transparent;"></div>
       </div>
-      <div class="space-y-2">
-        <p class="text-emerald-400 font-medium animate-pulse">Sincronizando com NotebookLM...</p>
-        <p class="text-xs text-slate-500">Processando indicadores de brasília-p90.pdf</p>
+      <div>
+        <p class="text-sm font-semibold animate-pulse mb-1" style="color: var(--brand);">Sincronizando com NotebookLM...</p>
+        <p class="text-xs" style="color: var(--text-tertiary);">Processando indicadores de brasília-p90.pdf</p>
       </div>
     </div>
   </div>
 
-  <!-- VIEW MODE: SLIDE DECK -->
-  <div *ngIf="isFinished" class="w-full h-full max-w-5xl flex flex-col space-y-6 animate-in slide-in-from-bottom duration-500">
-    
-    <!-- HEADER -->
-    <div class="flex justify-between items-center">
-      <button (click)="voltar()" class="text-slate-400 hover:text-white flex items-center gap-2 transition-colors">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+  <!-- ══ SLIDE DECK ══ -->
+  <div *ngIf="isFinished" class="w-full h-full max-w-5xl flex flex-col gap-5 p-6 animate-in slide-in-from-bottom-4 duration-500">
+
+    <!-- Slide Header -->
+    <div class="flex items-center justify-between shrink-0">
+      <button (click)="voltar()"
+        class="flex items-center gap-2 text-sm font-medium transition-colors"
+        style="color: var(--text-tertiary);">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
         </svg>
         Nova Geração
       </button>
-      <div class="px-4 py-1 bg-slate-800 rounded-full text-xs font-mono text-emerald-400 border border-slate-700">
-        POWERED BY GEMINI 1.5 PRO
+
+      <div class="flex items-center gap-2">
+        <span class="text-[9px] font-mono" style="color: var(--text-tertiary);">
+          {{ currentSlideIndex + 1 }} / {{ slides.length }}
+        </span>
+        <div class="px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider font-mono"
+          style="background: var(--bg-elevated); color: var(--brand); border: 1px solid var(--border);">
+          Gemini 1.5 Pro
+        </div>
       </div>
     </div>
 
-    <!-- MAIN SLIDE VIEWER -->
-    <div class="flex-1 relative group">
-      <div class="absolute inset-0 bg-gradient-to-br from-emerald-600/10 to-transparent blur-3xl -z-10 group-hover:from-emerald-600/20 transition-all duration-700"></div>
-      
-      <div class="h-full bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-[2.5rem] p-12 flex flex-col shadow-2xl relative overflow-hidden slide-container">
-        
-        <!-- SLIDE CONTENT -->
-        <div class="flex-1 space-y-8 animate-in slide-in-from-right duration-500">
-          <div class="space-y-2">
-            <span class="text-emerald-500 font-bold tracking-widest uppercase text-sm">Slide {{currentSlideIndex + 1}}</span>
-            <h2 class="text-4xl lg:text-5xl font-extrabold text-white leading-tight">
-              {{slides[currentSlideIndex].titulo}}
-            </h2>
-          </div>
+    <!-- Main Slide -->
+    <div class="flex-1 relative min-h-0">
 
-          <ul class="space-y-6">
-            <li *ngFor="let topico of slides[currentSlideIndex].topicos" class="flex items-start gap-4 text-xl text-slate-300">
-              <span class="mt-2 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></span>
-              {{topico}}
+      <!-- Ambient glow -->
+      <div class="absolute inset-0 pointer-events-none rounded-[32px] overflow-hidden">
+        <div class="absolute top-0 right-0 w-80 h-80 opacity-[0.06] rounded-full"
+          style="background: radial-gradient(circle, var(--brand) 0%, transparent 70%); transform: translate(30%,-30%);"></div>
+      </div>
+
+      <div class="h-full rounded-[32px] p-10 lg:p-14 flex flex-col relative border"
+        style="background: var(--bg-surface); border-color: var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.10);">
+
+        <!-- Slide number chip -->
+        <div class="mb-6">
+          <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em]"
+            style="background: rgba(16,185,129,0.10); color: var(--brand); border: 1px solid rgba(16,185,129,0.20);">
+            <span class="w-1.5 h-1.5 rounded-full" style="background: var(--brand);"></span>
+            Slide {{ currentSlideIndex + 1 }}
+          </span>
+        </div>
+
+        <!-- Title -->
+        <div class="flex-1 space-y-8">
+          <h2 class="text-4xl lg:text-5xl font-black leading-[1.05] tracking-tight font-display" style="color: var(--text-primary);">
+            {{ slides[currentSlideIndex].titulo }}
+          </h2>
+
+          <ul class="space-y-5">
+            <li *ngFor="let topico of slides[currentSlideIndex].topicos; let i = index"
+              class="flex items-start gap-4 animate-in fade-in"
+              [style.animation-delay]="(i * 0.08) + 's'">
+              <div class="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-xs font-black"
+                style="background: rgba(16,185,129,0.12); color: var(--brand); border: 1px solid rgba(16,185,129,0.20);">
+                {{ i + 1 }}
+              </div>
+              <span class="text-lg font-medium leading-snug" style="color: var(--text-secondary);">{{ topico }}</span>
             </li>
           </ul>
         </div>
 
-        <!-- PROGRESS BAR -->
-        <div class="mt-8 h-1 bg-slate-700 rounded-full overflow-hidden">
-          <div 
-            class="h-full bg-emerald-500 transition-all duration-500"
+        <!-- Progress bar -->
+        <div class="mt-8 h-0.5 rounded-full overflow-hidden" style="background: var(--border);">
+          <div class="h-full rounded-full transition-all duration-700"
+            style="background: var(--brand);"
             [style.width.%]="((currentSlideIndex + 1) / slides.length) * 100">
           </div>
         </div>
       </div>
     </div>
 
-    <!-- FOOTER NAV & NOTES -->
-    <div class="flex gap-6 items-stretch">
-      <!-- NAVIGATION -->
-      <div class="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-3xl p-2 flex gap-2">
-        <button 
-          (click)="anteriorSlide()" 
+    <!-- Nav + Notes -->
+    <div class="flex gap-4 items-stretch shrink-0">
+
+      <!-- Navigation -->
+      <div class="flex gap-1 p-1.5 rounded-2xl border" style="background: var(--bg-surface); border-color: var(--border);">
+        <button (click)="anteriorSlide()"
           [disabled]="currentSlideIndex === 0"
-          class="p-4 hover:bg-slate-700 disabled:opacity-30 disabled:hover:bg-transparent rounded-2xl transition-all">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          class="w-11 h-11 rounded-xl flex items-center justify-center transition-all disabled:opacity-25"
+          style="color: var(--text-secondary);">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/>
           </svg>
         </button>
-        <button 
-          (click)="proximoSlide()" 
+        <button (click)="proximoSlide()"
           [disabled]="currentSlideIndex === slides.length - 1"
-          class="p-4 hover:bg-slate-700 disabled:opacity-30 disabled:hover:bg-transparent rounded-2xl transition-all">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          class="w-11 h-11 rounded-xl flex items-center justify-center transition-all disabled:opacity-25"
+          style="color: var(--text-secondary);">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
           </svg>
         </button>
       </div>
 
-      <!-- SPEAKER NOTES -->
-      <div class="flex-1 bg-emerald-950/20 backdrop-blur-md border border-emerald-500/10 rounded-3xl p-6 flex flex-col justify-center">
-        <div class="flex items-center gap-2 mb-1">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+      <!-- Speaker Notes -->
+      <div class="flex-1 flex items-center gap-3 px-5 py-4 rounded-2xl border"
+        style="background: var(--bg-elevated); border-color: var(--border);">
+        <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+          style="background: rgba(16,185,129,0.10); color: var(--brand);">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125"/>
           </svg>
-          <span class="text-xs font-bold text-emerald-400 uppercase tracking-tighter">Insights do Orador</span>
         </div>
-        <p class="text-sm text-slate-400 italic">
-          "{{slides[currentSlideIndex].notas}}"
-        </p>
+        <div class="flex-1 min-w-0">
+          <p class="text-[9px] font-bold uppercase tracking-widest mb-1" style="color: var(--text-tertiary);">Insights do Orador</p>
+          <p class="text-sm italic leading-snug line-clamp-2" style="color: var(--text-secondary);">
+            "{{ slides[currentSlideIndex].notas }}"
+          </p>
+        </div>
       </div>
-    </div>
 
+    </div>
   </div>
 </div>

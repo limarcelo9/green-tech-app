@@ -12,6 +12,11 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 export class AppComponent {
   title = 'green-tech-app';
   isDark = true;
+  isSidebarMinimized = false;
+
+  toggleSidebar() {
+    this.isSidebarMinimized = !this.isSidebarMinimized;
+  }
 
   toggleDarkMode() {
     this.isDark = !this.isDark;

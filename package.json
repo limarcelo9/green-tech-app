@@ -21,13 +21,17 @@
     "@types/leaflet": "^1.9.21",
     "chart.js": "^4.5.1",
     "leaflet": "^1.9.4",
-    "leaflet-draw": "^1.0.4",
+    "@geoman-io/leaflet-geoman-free": "^2.17.0",
+    "leaflet.heat": "^0.2.0",
+    "leaflet.markercluster": "^1.5.3",
     "ng2-charts": "^8.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.10"
   },
   "devDependencies": {
+    "@types/leaflet.heat": "^0.2.4",
+    "@types/leaflet.markercluster": "^1.5.4",
     "@angular-devkit/build-angular": "^18.2.21",
     "@angular/cli": "^18.2.21",
     "@angular/compiler-cli": "^18.2.0",
